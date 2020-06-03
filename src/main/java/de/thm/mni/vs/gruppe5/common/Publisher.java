@@ -5,7 +5,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import javax.jms.*;
 import java.io.Serializable;
 
-public class Publisher {
+public class Publisher implements AutoCloseable {
+    private final Connection connection;
     private Queue queue;
     private MessageProducer producer;
     private final Session session;
@@ -19,7 +20,7 @@ public class Publisher {
     public Publisher(String queueName) throws JMSException {
         var connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnectionFactory.DEFAULT_BROKER_URL);
         connectionFactory.setTrustAllPackages(true);
-        var connection = connectionFactory.createConnection();
+        connection = connectionFactory.createConnection();
         connection.start();
 
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -37,5 +38,16 @@ public class Publisher {
         var msg = session.createObjectMessage();
         msg.setObject(object);
         producer.send(msg);
+    }
+
+    @Override
+    public void close() {
+        try {
+            connection.close();
+            producer.close();
+            session.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

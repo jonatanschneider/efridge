@@ -4,7 +4,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 
 import javax.jms.*;
 
-public class Subscriber {
+public class Subscriber implements AutoCloseable {
+    private Connection connection;
     private Queue queue;
     private MessageConsumer consumer;
     private final Session session;
@@ -19,12 +20,23 @@ public class Subscriber {
     public Subscriber(String queueName, MessageListener messageListener) throws JMSException {
         var connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnectionFactory.DEFAULT_BROKER_URL);
         connectionFactory.setTrustAllPackages(true);
-        var connection = connectionFactory.createConnection();
+        connection = connectionFactory.createConnection();
         connection.start();
 
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         queue = session.createQueue(queueName);
         consumer = session.createConsumer(queue);
         consumer.setMessageListener(messageListener);
+    }
+
+    @Override
+    public void close() {
+        try {
+            connection.close();
+            consumer.close();
+            session.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
