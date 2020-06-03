@@ -1,4 +1,41 @@
 package de.thm.mni.vs.gruppe5.common;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
+
+import javax.jms.*;
+import java.io.Serializable;
+
 public class Publisher {
+    private Queue queue;
+    private MessageProducer producer;
+    private final Session session;
+
+    /**
+     * Create an instance to publish messages later
+     *
+     * @param queueName Name of the channel to publish to
+     * @throws JMSException Thrown in case of internal server error
+     */
+    public Publisher(String queueName) throws JMSException {
+        var connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnectionFactory.DEFAULT_BROKER_URL);
+        connectionFactory.setTrustAllPackages(true);
+        var connection = connectionFactory.createConnection();
+        connection.start();
+
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        queue = session.createQueue(queueName);
+        producer = session.createProducer(queue);
+    }
+
+    /**
+     * Publish a serializable object
+     *
+     * @param object serializable object to publish
+     * @throws JMSException Thrown in case of internal server error
+     */
+    public void publish(Serializable object) throws JMSException {
+        var msg = session.createObjectMessage();
+        msg.setObject(object);
+        producer.send(msg);
+    }
 }
