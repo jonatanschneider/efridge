@@ -25,7 +25,6 @@ public class Headquarter {
         var publisher = new Publisher("orderQueue");
     }
 
-
     private MessageListener messageListener = m -> {
         if (m instanceof ObjectMessage) {
             var objectMessage = (ObjectMessage) m;
