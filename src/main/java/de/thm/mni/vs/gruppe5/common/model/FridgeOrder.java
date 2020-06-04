@@ -1,7 +1,6 @@
-package de.thm.mni.vs.gruppe5.common;
+package de.thm.mni.vs.gruppe5.common.model;
 
 import javax.persistence.*;
-import java.util.Map;
 import java.util.Set;
 
 @Entity

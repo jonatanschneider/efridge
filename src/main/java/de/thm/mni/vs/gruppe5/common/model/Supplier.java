@@ -1,4 +1,4 @@
-package de.thm.mni.vs.gruppe5.common;
+package de.thm.mni.vs.gruppe5.common.model;
 
 public enum Supplier {
     CoolMechanics,
