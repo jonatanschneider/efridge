@@ -21,4 +21,33 @@ public class ProductPart implements Serializable {
         this.part = part;
         this.quantity = quantity;
     }
+
+    public String getId() {
+        return id;
+    }
+
+    public Part getPart() {
+        return part;
+    }
+
+    public void setPart(Part part) {
+        this.part = part;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    @Override
+    public String toString() {
+        return "ProductPart{" +
+                "id='" + id + '\'' +
+                ", part=" + part +
+                ", quantity=" + quantity +
+                '}';
+    }
 }
