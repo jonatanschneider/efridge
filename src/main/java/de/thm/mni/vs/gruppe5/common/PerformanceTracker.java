@@ -1,0 +1,65 @@
+package de.thm.mni.vs.gruppe5.common;
+
+import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
+import de.thm.mni.vs.gruppe5.common.model.OrderItem;
+
+public class PerformanceTracker {
+    private int orderCount;
+    private int producedProductsCount;
+    private float producedProductsCost;
+
+    private static PerformanceTracker instance;
+
+    private PerformanceTracker() {
+        reset();
+    }
+
+    public static PerformanceTracker getInstance() {
+        if (instance == null) {
+            instance = new PerformanceTracker();
+        }
+        return instance;
+    }
+
+    public void reset() {
+        orderCount = 0;
+        producedProductsCount = 0;
+        producedProductsCost = 0;
+    }
+
+    public void finishedOrder(FridgeOrder order) {
+        orderCount++;
+    }
+
+    public void finishedOrderItem(OrderItem item) {
+        var productCost = item.getProduct().getProductParts()
+                .stream()
+                .mapToDouble(p -> p.getPart().getCost() * p.getQuantity())
+                .sum();
+        var orderItemCost = productCost * item.getQuantity();
+
+        producedProductsCount += item.getQuantity();
+        producedProductsCost += orderItemCost;
+    }
+
+    public int getOrderCount() {
+        return orderCount;
+    }
+
+    public int getProducedProductsCount() {
+        return producedProductsCount;
+    }
+
+    public float getProducedProductsCost() {
+        return producedProductsCost;
+    }
+
+    @Override
+    public String toString() {
+        return "PerformanceTracker{" +
+                "orderCount=" + orderCount +
+                ", producedProducts=" + producedProductsCount +
+                ", producedProductsCost=" + producedProductsCost +
+                '}';
+    }
+}
