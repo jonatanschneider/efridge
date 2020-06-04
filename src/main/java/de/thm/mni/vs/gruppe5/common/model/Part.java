@@ -22,4 +22,33 @@ public class Part implements Serializable {
         this.cost = cost;
         this.supplier = supplier;
     }
+
+    public String getId() {
+        return id;
+    }
+
+    public double getCost() {
+        return cost;
+    }
+
+    public void setCost(double cost) {
+        this.cost = cost;
+    }
+
+    public Supplier getSupplier() {
+        return supplier;
+    }
+
+    public void setSupplier(Supplier supplier) {
+        this.supplier = supplier;
+    }
+
+    @Override
+    public String toString() {
+        return "Part{" +
+                "id='" + id + '\'' +
+                ", cost=" + cost +
+                ", supplier=" + supplier +
+                '}';
+    }
 }

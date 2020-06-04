@@ -25,4 +25,42 @@ public class Product implements Serializable {
         this.productionTime = productionTime;
         this.productParts = productParts;
     }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getProductionTime() {
+        return productionTime;
+    }
+
+    public void setProductionTime(int productionTime) {
+        this.productionTime = productionTime;
+    }
+
+    public Set<ProductPart> getProductParts() {
+        return productParts;
+    }
+
+    public void setProductParts(Set<ProductPart> productParts) {
+        this.productParts = productParts;
+    }
+
+    @Override
+    public String toString() {
+        return "Product{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", productionTime=" + productionTime +
+                ", productParts=" + productParts +
+                '}';
+    }
 }

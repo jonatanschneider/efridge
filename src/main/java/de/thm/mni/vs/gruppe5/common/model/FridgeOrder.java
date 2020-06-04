@@ -38,23 +38,42 @@ public class FridgeOrder implements Serializable {
         return customerId;
     }
 
+    public void setCustomerId(String customerId) {
+        this.customerId = customerId;
+    }
+
     public Set<OrderItem> getOrderItems() {
         return orderItems;
+    }
+
+    public void setOrderItems(Set<OrderItem> orderItems) {
+        this.orderItems = orderItems;
     }
 
     public OrderStatus getStatus() {
         return status;
     }
 
-    public boolean isPartsOrdered() {
-        return partsOrdered;
-    }
-
     public void setStatus(OrderStatus status) {
         this.status = status;
     }
 
+    public boolean isPartsOrdered() {
+        return partsOrdered;
+    }
+
     public void setPartsOrdered(boolean partsOrdered) {
         this.partsOrdered = partsOrdered;
+    }
+
+    @Override
+    public String toString() {
+        return "FridgeOrder{" +
+                "id='" + id + '\'' +
+                ", customerId='" + customerId + '\'' +
+                ", orderItems=" + orderItems +
+                ", status=" + status +
+                ", partsOrdered=" + partsOrdered +
+                '}';
     }
 }
