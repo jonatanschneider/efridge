@@ -3,28 +3,29 @@ package de.thm.mni.vs.gruppe5.factory;
 import de.thm.mni.vs.gruppe5.common.Config;
 import de.thm.mni.vs.gruppe5.common.Publisher;
 import de.thm.mni.vs.gruppe5.common.Subscriber;
-import de.thm.mni.vs.gruppe5.common.model.*;
+import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
 
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import java.util.HashSet;
-import java.util.concurrent.CompletableFuture;
 
 public class Factory {
     private IProduction production;
     private Publisher finishedOrderPublisher;
+    private int productionTimeFactor = 1;
 
     public static void main(String[] args) {
-        var factory = new Factory();
+        var factory = new Factory(2);
 
         try {
             factory.setup();
         } catch (JMSException e) {
             e.printStackTrace();
         }
+    }
+
+    public Factory(int productionTimeFactor) {
+        this.productionTimeFactor = productionTimeFactor;
     }
 
     private void setup() throws JMSException {
@@ -48,7 +49,7 @@ public class Factory {
             var order = (FridgeOrder) objectMessage.getObject();
 
             System.out.println("Received order: " + order.toString());
-            production.orderParts(order).thenCompose(o -> production.produce(o)).thenAccept(this::reportFinishedOrder);
+            production.orderParts(order).thenCompose(o -> production.produce(o, this.productionTimeFactor)).thenAccept(this::reportFinishedOrder);
         } catch (Exception e) {
             e.printStackTrace();
         }

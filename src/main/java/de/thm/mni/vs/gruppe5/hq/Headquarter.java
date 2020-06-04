@@ -50,10 +50,13 @@ public class Headquarter implements AutoCloseable {
 
     private FridgeOrder getDemoOrder() {
         var part = new Part(2.4, Supplier.CoolMechanics);
+        var part2 = new Part(1, Supplier.ElectroStuff);
 
         var set = new HashSet<ProductPart>();
         var productPart = new ProductPart(part, 2);
+        var productPart2 = new ProductPart(part2, 1);
         set.add(productPart);
+        set.add(productPart2);
         var product = new Product("Tolles Produkt", 4, set);
 
         var set2 = new HashSet<OrderItem>();
