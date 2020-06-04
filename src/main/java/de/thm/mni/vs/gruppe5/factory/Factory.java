@@ -36,7 +36,7 @@ public class Factory {
             var order = (FridgeOrder) objectMessage.getObject();
 
             System.out.println("Received order: " + order.toString());
-            var future = production.orderParts(order).thenAcceptAsync(o -> production.produce(order)).thenAcceptAsync(o -> System.out.println("Test"));
+            production.orderParts(order).thenCompose(o -> production.produce(o)).thenRun(() -> System.out.println("Fertig"));
         } catch (Exception e) {
             e.printStackTrace();
         }
