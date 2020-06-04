@@ -44,8 +44,9 @@ public class Production implements IProduction {
             System.out.println("Producing");
 
             order.getOrderItems().forEach(orderItem -> {
-                var time = (long) (orderItem.getProduct().getProductionTime() * orderItem.getQuantity() * factoryTimeFactor);
-                System.out.println("Waiting for " + time + " seconds");
+                var product = orderItem.getProduct();
+                var time = (long) (product.getProductionTime() * orderItem.getQuantity() * factoryTimeFactor);
+                System.out.println("Producing '" + product.getName() + "' (" + orderItem.getQuantity() + "x): " + time + " seconds");
                 try {
                     Thread.sleep(time * 1000);
                 } catch (InterruptedException e) {
