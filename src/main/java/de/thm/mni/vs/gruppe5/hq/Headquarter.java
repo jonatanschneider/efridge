@@ -43,8 +43,6 @@ public class Headquarter implements AutoCloseable {
     }
 
     private void persist(FridgeOrder order) {
-        var emf = Persistence.createEntityManagerFactory("eFridge");
-        var em = emf.createEntityManager();
         em.getTransaction().begin();
         em.persist(order);
         em.getTransaction().commit();
