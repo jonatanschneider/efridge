@@ -9,7 +9,7 @@ public class OrderItem implements Serializable {
     @GeneratedValue
     private String id;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne
     private Product product;
 
     private int quantity;

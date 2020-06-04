@@ -6,7 +6,6 @@ import java.util.Set;
 @Entity
 public class Product implements Serializable {
     @Id
-    @GeneratedValue
     private String id;
 
     private String name;
@@ -20,7 +19,8 @@ public class Product implements Serializable {
 
     }
 
-    public Product(String name, int productionTime, Set<ProductPart> productParts) {
+    public Product(String id, String name, int productionTime, Set<ProductPart> productParts) {
+        this.id = id;
         this.name = name;
         this.productionTime = productionTime;
         this.productParts = productParts;
@@ -28,6 +28,10 @@ public class Product implements Serializable {
 
     public String getId() {
         return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getName() {
