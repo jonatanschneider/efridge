@@ -1,6 +1,8 @@
 package de.thm.mni.vs.gruppe5.common.model;
 
-public enum Supplier {
+import java.io.Serializable;
+
+public enum Supplier implements Serializable {
     CoolMechanics,
     ElectroStuff
 }

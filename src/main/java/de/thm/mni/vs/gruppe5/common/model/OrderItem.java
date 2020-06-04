@@ -1,9 +1,10 @@
 package de.thm.mni.vs.gruppe5.common.model;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
-public class OrderItem {
+public class OrderItem implements Serializable {
     @Id
     @GeneratedValue
     private String id;
