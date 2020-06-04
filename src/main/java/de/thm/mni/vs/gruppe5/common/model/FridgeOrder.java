@@ -1,10 +1,11 @@
 package de.thm.mni.vs.gruppe5.common.model;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.Set;
 
 @Entity
-public class FridgeOrder {
+public class FridgeOrder implements Serializable {
     @Id
     @GeneratedValue
     private String id;
