@@ -39,12 +39,12 @@ public class Production implements IProduction {
     }
 
     @Override
-    public CompletableFuture<FridgeOrder> produce(FridgeOrder order, int factoryTimeFactor) {
+    public CompletableFuture<FridgeOrder> produce(FridgeOrder order, float factoryTimeFactor) {
         return CompletableFuture.supplyAsync(() -> {
             System.out.println("Producing");
 
             order.getOrderItems().forEach(orderItem -> {
-                var time = orderItem.getProduct().getProductionTime() * factoryTimeFactor * orderItem.getQuantity();
+                var time = (long) (orderItem.getProduct().getProductionTime() * orderItem.getQuantity() * factoryTimeFactor);
                 System.out.println("Waiting for " + time + " seconds");
                 try {
                     Thread.sleep(time * 1000);

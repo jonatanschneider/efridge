@@ -12,10 +12,10 @@ import javax.jms.ObjectMessage;
 public class Factory {
     private IProduction production;
     private Publisher finishedOrderPublisher;
-    private int productionTimeFactor = 1;
+    private float productionTimeFactor;
 
     public static void main(String[] args) {
-        var factory = new Factory(2);
+        var factory = new Factory(0.5f);
 
         try {
             factory.setup();
@@ -24,7 +24,7 @@ public class Factory {
         }
     }
 
-    public Factory(int productionTimeFactor) {
+    public Factory(float productionTimeFactor) {
         this.productionTimeFactor = productionTimeFactor;
     }
 
