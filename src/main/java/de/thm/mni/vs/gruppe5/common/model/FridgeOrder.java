@@ -29,4 +29,32 @@ public class FridgeOrder implements Serializable {
         this.status = status;
         this.partsOrdered = partsOrdered;
     }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getCustomerId() {
+        return customerId;
+    }
+
+    public Set<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public boolean isPartsOrdered() {
+        return partsOrdered;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
+
+    public void setPartsOrdered(boolean partsOrdered) {
+        this.partsOrdered = partsOrdered;
+    }
 }
