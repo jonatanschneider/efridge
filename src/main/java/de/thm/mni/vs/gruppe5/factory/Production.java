@@ -21,7 +21,7 @@ public class Production implements IProduction {
     }
 
     @Override
-    public Future<FridgeOrder> orderParts(FridgeOrder order) {
+    public CompletableFuture<FridgeOrder> orderParts(FridgeOrder order) {
         return CompletableFuture.supplyAsync(() -> {
             waitRandom(10);
             return order;
@@ -29,7 +29,7 @@ public class Production implements IProduction {
     }
 
     @Override
-    public Future<FridgeOrder> produce(FridgeOrder order) {
+    public CompletableFuture<FridgeOrder> produce(FridgeOrder order) {
         return CompletableFuture.supplyAsync(() -> {
             waitRandom(10);
             return order;
