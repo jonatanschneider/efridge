@@ -3,9 +3,11 @@
 
     <persistence-unit name="eFridge">
         <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-        <!--<class>de.thm.mni.vs.gruppe5.common.Order</class>-->
+        <class>de.thm.mni.vs.gruppe5.common.FridgeOrder</class>
         <class>de.thm.mni.vs.gruppe5.common.Part</class>
-        <!--<class>de.thm.mni.vs.gruppe5.common.Product</class>-->
+        <class>de.thm.mni.vs.gruppe5.common.Product</class>
+        <class>de.thm.mni.vs.gruppe5.common.ProductPart</class>
+        <class>de.thm.mni.vs.gruppe5.common.OrderItem</class>
         <properties>
             <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost/db"/>
             <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>

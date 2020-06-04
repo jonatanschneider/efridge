@@ -1,17 +1,27 @@
 package de.thm.mni.vs.gruppe5.common;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import java.util.Map;
+import javax.persistence.*;
+import java.util.Set;
 
 @Entity
 public class Product {
     @Id
+    @GeneratedValue
     private String id;
 
     private String name;
 
     private int productionTime;
 
-    //private Map<String, Integer> parts;
+    @OneToMany(cascade = CascadeType.ALL)
+    private Set<ProductPart> productParts;
 
+    public Product() {
+
+    }
+
+    public Product(String name, int productionTime, Set<ProductPart> productParts) {
+        this.name = name;
+        this.productionTime = productionTime;
+        this.productParts = productParts;
+    }
 }

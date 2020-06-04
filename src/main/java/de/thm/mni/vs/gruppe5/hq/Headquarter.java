@@ -1,6 +1,5 @@
 package de.thm.mni.vs.gruppe5.hq;
 
-import de.thm.mni.vs.gruppe5.common.Order;
 import de.thm.mni.vs.gruppe5.common.Publisher;
 import de.thm.mni.vs.gruppe5.common.Subscriber;
 
