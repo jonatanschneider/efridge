@@ -8,6 +8,7 @@ import de.thm.mni.vs.gruppe5.common.model.*;
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
+import javax.persistence.Persistence;
 import java.util.HashSet;
 
 public class Headquarter {
@@ -33,7 +34,18 @@ public class Headquarter {
 
     private void processIncomingOrder(FridgeOrder order) throws JMSException {
         System.out.println("Send order to factories: " + order.toString());
+        persist(order);
         orderPublisher.publish(order);
+    }
+
+    private void persist(FridgeOrder order) {
+        var emf = Persistence.createEntityManagerFactory("eFridge");
+        var em = emf.createEntityManager();
+        em.getTransaction().begin();
+        em.persist(order);
+        em.getTransaction().commit();
+        em.close();
+        emf.close();
     }
 
     private FridgeOrder getDemoOrder() {
