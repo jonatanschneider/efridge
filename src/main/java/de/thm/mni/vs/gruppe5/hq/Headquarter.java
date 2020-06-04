@@ -8,19 +8,23 @@ import de.thm.mni.vs.gruppe5.common.model.*;
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import java.util.HashSet;
 
-public class Headquarter {
+public class Headquarter implements AutoCloseable {
     private Publisher orderPublisher;
+    EntityManagerFactory emf = Persistence.createEntityManagerFactory("eFridge");
+    EntityManager em = emf.createEntityManager();
 
     public static void main(String[] args) {
-       var hq = new Headquarter();
-       try {
+       try (var hq = new Headquarter()) {
            hq.setup();
 
            // TODO TMP: demo order
            hq.processIncomingOrder(hq.getDemoOrder());
+
        } catch (Exception e) {
            e.printStackTrace();
        }
@@ -44,8 +48,6 @@ public class Headquarter {
         em.getTransaction().begin();
         em.persist(order);
         em.getTransaction().commit();
-        em.close();
-        emf.close();
     }
 
     private FridgeOrder getDemoOrder() {
@@ -82,4 +84,10 @@ public class Headquarter {
             System.out.println(objectMessage.toString());
         }
     };
+
+    @Override
+    public void close() throws Exception {
+        em.close();
+        emf.close();
+    }
 }
