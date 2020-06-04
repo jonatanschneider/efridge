@@ -14,7 +14,9 @@ public class Production implements IProduction {
     private void waitRandom(int maxSeconds) {
         var r = new Random();
         try {
-            Thread.sleep(r.nextInt(maxSeconds) * 1000);
+            var i = r.nextInt(maxSeconds);
+            System.out.println("Waiting " + i + " seconds");
+            Thread.sleep(i * 1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -23,6 +25,7 @@ public class Production implements IProduction {
     @Override
     public CompletableFuture<FridgeOrder> orderParts(FridgeOrder order) {
         return CompletableFuture.supplyAsync(() -> {
+            System.out.println("Ordering");
             waitRandom(10);
             return order;
         });
@@ -31,6 +34,7 @@ public class Production implements IProduction {
     @Override
     public CompletableFuture<FridgeOrder> produce(FridgeOrder order) {
         return CompletableFuture.supplyAsync(() -> {
+            System.out.println("Producing");
             waitRandom(10);
             return order;
         });

@@ -10,6 +10,7 @@ import javax.jms.ObjectMessage;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import java.util.HashSet;
+import java.util.concurrent.CompletableFuture;
 
 public class Factory {
     private IProduction production;
@@ -26,7 +27,7 @@ public class Factory {
 
     private void setup() throws JMSException {
         var orders = new Subscriber(Config.ORDER_QUEUE, processOrder);
-        // TODO setup production
+        production = new Production();
     }
 
     private final MessageListener processOrder = m -> {
@@ -35,7 +36,7 @@ public class Factory {
             var order = (FridgeOrder) objectMessage.getObject();
 
             System.out.println("Received order: " + order.toString());
-            // TODO: Trigger production when setup
+            var future = production.orderParts(order).thenAcceptAsync(o -> production.produce(order)).thenAcceptAsync(o -> System.out.println("Test"));
         } catch (Exception e) {
             e.printStackTrace();
         }
