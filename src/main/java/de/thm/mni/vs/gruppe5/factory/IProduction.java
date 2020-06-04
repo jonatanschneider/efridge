@@ -6,5 +6,5 @@ import java.util.concurrent.CompletableFuture;
 
 public interface IProduction {
     CompletableFuture<FridgeOrder> orderParts(FridgeOrder order);
-    CompletableFuture<FridgeOrder> produce(FridgeOrder order);
+    CompletableFuture<FridgeOrder> produce(FridgeOrder order, float factoryTimeFactor);
 }
