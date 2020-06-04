@@ -60,7 +60,7 @@ public class Headquarter {
         var item = new OrderItem(product, 2);
         set2.add(item);
 
-        return new FridgeOrder("customerId", set2, OrderStatus.RECEIVED, true);
+        return new FridgeOrder("customerId", set2, OrderStatus.RECEIVED, false);
     }
 
     private MessageListener incomingOrderListener = m -> {
