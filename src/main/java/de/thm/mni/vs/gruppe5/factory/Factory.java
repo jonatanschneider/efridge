@@ -28,6 +28,7 @@ public class Factory {
     }
 
     private void setup() throws JMSException {
+        Config.initializeProducts();
         var orders = new Subscriber(Config.ORDER_QUEUE, processOrder);
         finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
         production = new Production();

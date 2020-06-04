@@ -12,6 +12,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import java.util.HashSet;
+import java.util.List;
 
 public class Headquarter implements AutoCloseable {
     private Publisher orderPublisher;
@@ -31,6 +32,7 @@ public class Headquarter implements AutoCloseable {
     }
 
     private void setup() throws JMSException {
+        Config.initializeProducts();
         var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
         var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, messageListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
@@ -49,18 +51,11 @@ public class Headquarter implements AutoCloseable {
     }
 
     private FridgeOrder getDemoOrder() {
-        var part = new Part(2.4, Supplier.CoolMechanics);
+        var set = new HashSet<OrderItem>();
+        var item = new OrderItem(em.find(Product.class, "1"), 2);
+        set.add(item);
 
-        var set = new HashSet<ProductPart>();
-        var productPart = new ProductPart(part, 2);
-        set.add(productPart);
-        var product = new Product("Tolles Produkt", 4, set);
-
-        var set2 = new HashSet<OrderItem>();
-        var item = new OrderItem(product, 2);
-        set2.add(item);
-
-        return new FridgeOrder("customerId", set2, OrderStatus.RECEIVED, false);
+        return new FridgeOrder("customerId", set, OrderStatus.RECEIVED, false);
     }
 
     private MessageListener incomingOrderListener = m -> {
