@@ -1,5 +1,6 @@
 package de.thm.mni.vs.gruppe5.hq;
 
+import de.thm.mni.vs.gruppe5.common.Config;
 import de.thm.mni.vs.gruppe5.common.Publisher;
 import de.thm.mni.vs.gruppe5.common.Subscriber;
 
@@ -8,6 +9,8 @@ import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
 
 public class Headquarter {
+    private Publisher orderPublisher;
+
     public static void main(String[] args) {
        var hq = new Headquarter();
        try {
@@ -19,9 +22,9 @@ public class Headquarter {
     }
 
     private void setup() throws JMSException {
-        var incomingOrders = new Subscriber("incomingOrderQueue", this.messageListener);
-        var finishedOrders = new Subscriber("finishedOrderQueue", this.messageListener);
-        var publisher = new Publisher("orderQueue");
+        var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, messageListener);
+        var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, messageListener);
+        orderPublisher = new Publisher(Config.ORDER_QUEUE);
     }
 
     private MessageListener messageListener = m -> {
