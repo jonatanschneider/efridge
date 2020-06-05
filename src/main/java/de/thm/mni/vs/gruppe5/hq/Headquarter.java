@@ -54,12 +54,18 @@ public class Headquarter implements AutoCloseable {
         try {
 
             var objectMessage = (ObjectMessage) m;
-            var json = (String) objectMessage.getObject();
-            var order = buildFridgeOrder(new Gson().fromJson(json, FrontendOrder.class));
+            var frontendOrder = new Gson().fromJson((String) objectMessage.getObject(), FrontendOrder.class);
 
-            System.out.println("Received order: " + order.toString());
+            if (!frontendOrder.isValid()){
+                System.out.println("Discarding invalid order " + frontendOrder);
+                return;
+            }
 
-            processIncomingOrder(order);
+            var fridgeOrder = buildFridgeOrder(frontendOrder);
+
+            System.out.println("Received order: " + fridgeOrder.toString());
+
+            processIncomingOrder(fridgeOrder);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -4,52 +4,73 @@ import com.google.gson.Gson;
 import de.thm.mni.vs.gruppe5.common.Config;
 import de.thm.mni.vs.gruppe5.common.FrontendOrder;
 import de.thm.mni.vs.gruppe5.common.Publisher;
+
 import javax.jms.JMSException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Scanner;
 
 public class eFridgeCli {
     private static final Scanner scanner = new Scanner(System.in);
+    private static Publisher incomingOrderPublisher;
 
     public static void main(String[] args) {
+        FrontendOrder order;
+
+        try {
+            incomingOrderPublisher = new Publisher(Config.INCOMING_ORDER_QUEUE);
+
+            if (!args[0].equals("")) order = parseJsonFile(args[0]);
+            else order = interactiveCreation();
+
+            sendOrder(order);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private static FrontendOrder interactiveCreation() {
+        var order = new FrontendOrder();
         var productIdsWithQuantity = new HashMap<Integer, Integer>();
+
         System.out.println("Enter customer id");
-        var customerId = scanner.nextLine();
+        order.setCustomerId(scanner.nextLine());
 
         var addProduct = true;
         do {
             System.out.println("Select product (1-5)");
             var productId = scanner.nextInt();
             scanner.nextLine();
+
             System.out.println("Enter quantity");
             var quantity = scanner.nextInt();
-            scanner.nextLine();
             productIdsWithQuantity.put(productId, quantity);
+            scanner.nextLine();
+
             System.out.println("Add another product? y/n");
             var answer = scanner.nextLine();
             addProduct = answer.trim().toLowerCase().equals("y");
-        } while(addProduct);
 
+        } while (addProduct);
 
-        //TODO validation
-
-        try {
-            sendOrder(customerId, productIdsWithQuantity);
-        } catch (JMSException ex) {
-            ex.printStackTrace();
-        }
-
+        order.setOrderProductIdsWithQuantity(productIdsWithQuantity);
+        return order;
     }
 
-    private static void sendOrder(String customerId, Map<Integer, Integer> productIdsWithQuantity) throws JMSException {
-        var incomingOrder = new Publisher(Config.INCOMING_ORDER_QUEUE);
-        var order = new FrontendOrder();
-        Gson gson = new Gson();
+    private static FrontendOrder parseJsonFile(String path) throws IOException {
+        var reader = Files.newBufferedReader(Paths.get(path));
+        return new Gson().fromJson(reader, FrontendOrder.class);
+    }
 
-        order.setCustomerId(customerId);
-        order.setOrderProductIdsWithQuantity(productIdsWithQuantity);
-        System.out.println("Publish");
-        incomingOrder.publish(gson.toJson(order));
+    private static void sendOrder(FrontendOrder order) throws JMSException {
+        if (!order.isValid()) {
+            System.out.println("Order is invalid, not publishing");
+            return;
+        }
+        System.out.println("Publish " + order.toString());
+        incomingOrderPublisher.publish(new Gson().toJson(order));
     }
 }
