@@ -12,7 +12,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import java.util.HashSet;
-import java.util.List;
 
 public class Headquarter implements AutoCloseable {
     private Publisher orderPublisher;

@@ -12,7 +12,7 @@ public class Product implements Serializable {
 
     private int productionTime;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<ProductPart> productParts;
 
     public Product() {
