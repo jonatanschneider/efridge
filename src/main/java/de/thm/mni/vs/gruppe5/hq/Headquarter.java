@@ -1,6 +1,8 @@
 package de.thm.mni.vs.gruppe5.hq;
 
+import com.google.gson.Gson;
 import de.thm.mni.vs.gruppe5.common.Config;
+import de.thm.mni.vs.gruppe5.common.FrontendOrder;
 import de.thm.mni.vs.gruppe5.common.Publisher;
 import de.thm.mni.vs.gruppe5.common.Subscriber;
 import de.thm.mni.vs.gruppe5.common.model.*;
@@ -48,18 +50,12 @@ public class Headquarter implements AutoCloseable {
         em.getTransaction().commit();
     }
 
-    private FridgeOrder getDemoOrder() {
-        var set = new HashSet<OrderItem>();
-        var item = new OrderItem(em.find(Product.class, "1"), 2);
-        set.add(item);
-
-        return new FridgeOrder("customerId", set, OrderStatus.RECEIVED, false);
-    }
-
     private MessageListener incomingOrderListener = m -> {
         try {
+
             var objectMessage = (ObjectMessage) m;
-            var order = (FridgeOrder) objectMessage.getObject();
+            var json = (String) objectMessage.getObject();
+            var order = buildFridgeOrder(new Gson().fromJson(json, FrontendOrder.class));
 
             System.out.println("Received order: " + order.toString());
 
@@ -68,6 +64,16 @@ public class Headquarter implements AutoCloseable {
             e.printStackTrace();
         }
     };
+
+    private FridgeOrder buildFridgeOrder(FrontendOrder frontendOrder) {
+        var order = new FridgeOrder();
+        order.setCustomerId(frontendOrder.customerId);
+        frontendOrder.getOrderProductIdsWithQuantity().entrySet().stream()
+                .map(entry -> new OrderItem(products.get(entry.getKey() - 1), entry.getValue()))
+                .forEach(order.getOrderItems()::add);
+        order.setStatus(OrderStatus.RECEIVED);
+        return order;
+    }
 
     private MessageListener messageListener = m -> {
         if (m instanceof ObjectMessage) {

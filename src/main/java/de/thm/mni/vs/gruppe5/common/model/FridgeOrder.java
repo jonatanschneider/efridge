@@ -2,6 +2,7 @@ package de.thm.mni.vs.gruppe5.common.model;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -20,7 +21,7 @@ public class FridgeOrder implements Serializable {
     private boolean partsOrdered;
 
     public FridgeOrder() {
-
+        this.orderItems = new HashSet<>();
     }
 
     public FridgeOrder(String customerId, Set<OrderItem> orderItems, OrderStatus status, boolean partsOrdered) {
