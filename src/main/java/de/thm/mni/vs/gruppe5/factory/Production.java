@@ -1,5 +1,6 @@
 package de.thm.mni.vs.gruppe5.factory;
 
+import de.thm.mni.vs.gruppe5.common.PerformanceTracker;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
 import de.thm.mni.vs.gruppe5.common.model.OrderStatus;
 
@@ -8,6 +9,12 @@ import java.util.concurrent.CompletableFuture;
 
 
 public class Production implements IProduction {
+    private PerformanceTracker performanceTracker;
+
+    public Production() {
+        performanceTracker = PerformanceTracker.getInstance();
+    }
+
     private void waitRandom(int maxSeconds) {
         var r = new Random();
         try {
@@ -52,8 +59,11 @@ public class Production implements IProduction {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
+                performanceTracker.finishedOrderItem(orderItem, time);
             });
 
+            performanceTracker.finishedOrder(order);
             order.setStatus(OrderStatus.COMPLETED);
             return order;
         });

@@ -1,6 +1,7 @@
 package de.thm.mni.vs.gruppe5.factory;
 
 import de.thm.mni.vs.gruppe5.common.Config;
+import de.thm.mni.vs.gruppe5.common.PerformanceTracker;
 import de.thm.mni.vs.gruppe5.common.Publisher;
 import de.thm.mni.vs.gruppe5.common.Subscriber;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
@@ -37,6 +38,7 @@ public class Factory {
 
     private void reportFinishedOrder(FridgeOrder order) {
         System.out.println("Finished order " + order.toString());
+        System.out.println("New Performance: " + PerformanceTracker.getInstance().toString());
         try {
             finishedOrderPublisher.publish(order);
         } catch (JMSException e) {
