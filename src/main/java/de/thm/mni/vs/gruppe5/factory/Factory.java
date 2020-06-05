@@ -8,14 +8,19 @@ import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Factory {
     private IProduction production;
     private Publisher finishedOrderPublisher;
     private float productionTimeFactor;
+    private int maxCapacity;
+    private List<FridgeOrder> currentOrders;
 
     public static void main(String[] args) {
-        var factory = new Factory(0.5f);
+        var factory = new Factory(0.5f, 1);
 
         try {
             factory.setup();
@@ -24,8 +29,10 @@ public class Factory {
         }
     }
 
-    public Factory(float productionTimeFactor) {
+    public Factory(float productionTimeFactor, int maxCapacity) {
         this.productionTimeFactor = productionTimeFactor;
+        this.maxCapacity = maxCapacity;
+        this.currentOrders = Collections.synchronizedList(new ArrayList<>(maxCapacity));
     }
 
     private void setup() throws JMSException {
@@ -39,6 +46,7 @@ public class Factory {
         System.out.println("Finished order " + order.toString());
         try {
             finishedOrderPublisher.publish(order);
+            currentOrders.remove(order);
         } catch (JMSException e) {
             e.printStackTrace();
         }
@@ -50,7 +58,12 @@ public class Factory {
             var order = (FridgeOrder) objectMessage.getObject();
 
             System.out.println("Received order: " + order.toString());
-            production.orderParts(order).thenCompose(o -> production.produce(o, this.productionTimeFactor)).thenAccept(this::reportFinishedOrder);
+            if (currentOrders.size() < maxCapacity) {
+                currentOrders.add(order);
+                production.orderParts(order).thenCompose(o -> production.produce(o, this.productionTimeFactor)).thenAccept(this::reportFinishedOrder);
+            } else {
+                System.out.println("Max capacity reached, didn't accept order: " + order.toString());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
