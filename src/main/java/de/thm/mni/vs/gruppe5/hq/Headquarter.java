@@ -11,27 +11,26 @@ import javax.jms.ObjectMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import java.util.HashSet;
+import java.util.List;
 
 public class Headquarter implements AutoCloseable {
     private Publisher orderPublisher;
+    private List<Product> products;
     EntityManagerFactory emf = Persistence.createEntityManagerFactory("eFridge");
     EntityManager em = emf.createEntityManager();
 
     public static void main(String[] args) {
-       try (var hq = new Headquarter()) {
+       try {
+           var hq = new Headquarter();
            hq.setup();
-
-           // TODO TMP: demo order
-           hq.processIncomingOrder(hq.getDemoOrder());
-
+           // TODO closing of resources
        } catch (Exception e) {
            e.printStackTrace();
        }
     }
 
     private void setup() throws JMSException {
-        Config.initializeProducts();
+        this.products = Config.initializeProducts();
         var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
         var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, messageListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
