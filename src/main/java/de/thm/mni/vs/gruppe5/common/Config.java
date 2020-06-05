@@ -15,6 +15,7 @@ public class Config {
     public static final String INCOMING_ORDER_QUEUE = "incomingOrderQueue";
     public static final String FINISHED_ORDER_QUEUE = "finishedOrderQueue";
     public static final String ORDER_QUEUE = "orderQueue";
+    public static final float PRODUCTION_COST_PER_SECOND = 0.5f;
 
     public static void initializeProducts() {
         var emf = Persistence.createEntityManagerFactory("eFridge");
@@ -104,5 +105,4 @@ public class Config {
 
         return result;
     }
-
 }

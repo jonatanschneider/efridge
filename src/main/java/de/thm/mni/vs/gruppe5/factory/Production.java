@@ -60,7 +60,7 @@ public class Production implements IProduction {
                     e.printStackTrace();
                 }
 
-                performanceTracker.finishedOrderItem(orderItem);
+                performanceTracker.finishedOrderItem(orderItem, time);
             });
 
             performanceTracker.finishedOrder(order);

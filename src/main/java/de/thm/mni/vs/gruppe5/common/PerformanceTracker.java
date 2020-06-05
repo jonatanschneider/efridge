@@ -31,12 +31,14 @@ public class PerformanceTracker {
         orderCount++;
     }
 
-    public void finishedOrderItem(OrderItem item) {
-        var productCost = item.getProduct().getProductParts()
+    public void finishedOrderItem(OrderItem item, long productionTime) {
+        var productionCost = productionTime * Config.PRODUCTION_COST_PER_SECOND;
+        var singleProductCost = item.getProduct().getProductParts()
                 .stream()
                 .mapToDouble(p -> p.getPart().getCost() * p.getQuantity())
                 .sum();
-        var orderItemCost = productCost * item.getQuantity();
+        var productCost = singleProductCost * item.getQuantity();
+        var orderItemCost = productCost + productionCost;
 
         producedProductsCount += item.getQuantity();
         producedProductsCost += orderItemCost;
