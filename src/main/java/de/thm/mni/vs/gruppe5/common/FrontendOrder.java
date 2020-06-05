@@ -27,9 +27,9 @@ public class FrontendOrder {
     public boolean isValid() {
         return getOrderProductIdsWithQuantity().entrySet().stream()
                 .anyMatch(entrySet ->
-                        entrySet.getKey() < 0 ||
-                        entrySet.getKey() >= 5 ||
-                        entrySet.getValue() < 0);
+                        entrySet.getKey() >= 0 &&
+                        entrySet.getKey() < 5 &&
+                        entrySet.getValue() > 0);
     }
 
     @Override
