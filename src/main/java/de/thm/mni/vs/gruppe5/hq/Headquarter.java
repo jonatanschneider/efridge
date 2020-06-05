@@ -31,6 +31,7 @@ public class Headquarter implements AutoCloseable {
     }
 
     private void setup() throws JMSException {
+        Config.initializeProducts();
         var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
         var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, messageListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
@@ -49,35 +50,11 @@ public class Headquarter implements AutoCloseable {
     }
 
     private FridgeOrder getDemoOrder() {
-        var part = new Part(2.4, Supplier.CoolMechanics);
-        var part2 = new Part(1, Supplier.ElectroStuff);
+        var set = new HashSet<OrderItem>();
+        var item = new OrderItem(em.find(Product.class, "1"), 2);
+        set.add(item);
 
-        var set = new HashSet<ProductPart>();
-        var productPart = new ProductPart(part, 2);
-        var productPart2 = new ProductPart(part2, 1);
-        set.add(productPart);
-        set.add(productPart2);
-        var product = new Product("Tolles Produkt", 4, set);
-
-        var order = new HashSet<OrderItem>();
-        var item = new OrderItem(product, 2);
-
-
-        var part3 = new Part(1, Supplier.CoolMechanics);
-        var part4 = new Part(12, Supplier.ElectroStuff);
-
-        var set3 = new HashSet<ProductPart>();
-        var productPart3 = new ProductPart(part3, 1);
-        var productPart4 = new ProductPart(part4, 1);
-        set.add(productPart3);
-        set.add(productPart4);
-        var product2 = new Product("Tolles 2. Produkt", 4, set3);
-        var item2 = new OrderItem(product2, 2);
-
-        order.add(item);
-        order.add(item2);
-
-        return new FridgeOrder("customerId", order, OrderStatus.RECEIVED, false);
+        return new FridgeOrder("customerId", set, OrderStatus.RECEIVED, false);
     }
 
     private MessageListener incomingOrderListener = m -> {

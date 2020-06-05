@@ -41,7 +41,7 @@ public class Production implements IProduction {
     @Override
     public CompletableFuture<FridgeOrder> produce(FridgeOrder order, float factoryTimeFactor) {
         return CompletableFuture.supplyAsync(() -> {
-            System.out.println("Producing");
+            System.out.println("Producing order " + order.getId());
 
             order.getOrderItems().forEach(orderItem -> {
                 var product = orderItem.getProduct();
