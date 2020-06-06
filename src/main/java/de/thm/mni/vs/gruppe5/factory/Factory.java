@@ -2,6 +2,7 @@ package de.thm.mni.vs.gruppe5.factory;
 
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
+import de.thm.mni.vs.gruppe5.factory.report.ReportTask;
 
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
@@ -9,11 +10,13 @@ import javax.jms.ObjectMessage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Timer;
 
 public class Factory {
     private Location location;
     private IProduction production;
     private Publisher finishedOrderPublisher;
+    private Publisher reportPublisher;
     private float productionTimeFactor;
     private int maxCapacity;
     private List<FridgeOrder> currentOrders;
@@ -74,6 +77,10 @@ public class Factory {
         var orders = new Subscriber(Config.ORDER_QUEUE, processOrder);
         finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
         production = new Production();
+        reportPublisher = new Publisher(Config.REPORT_QUEUE);
+
+        var reportTask = new ReportTask(reportPublisher);
+        new Timer().scheduleAtFixedRate(reportTask, 0, Config.REPORT_INTERVAL * 1000);
     }
 
     private void reportFinishedOrder(FridgeOrder order) {
