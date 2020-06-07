@@ -48,9 +48,7 @@ public class Factory {
         try {
             finishedOrderPublisher.publish(order);
             currentOrders.remove(order);
-            if (currentOrders.size() == maxCapacity - 1) {
-                orders.restart();
-            }
+            orders.restart();
         } catch (JMSException e) {
             e.printStackTrace();
         }
