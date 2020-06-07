@@ -39,4 +39,20 @@ public class Subscriber implements AutoCloseable {
             e.printStackTrace();
         }
     }
+
+    public void pause() {
+        try {
+            connection.stop();
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void restart() {
+        try {
+            connection.start();
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
+    }
 }
