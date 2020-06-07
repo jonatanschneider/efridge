@@ -18,9 +18,10 @@ public class Factory {
     private float productionTimeFactor;
     private int maxCapacity;
     private List<FridgeOrder> currentOrders;
+    private Subscriber orders;
 
     public static void main(String[] args) {
-        var factory = new Factory(0.5f, 1);
+        var factory = new Factory(0.5f, 2);
 
         try {
             factory.setup();
@@ -37,7 +38,7 @@ public class Factory {
 
     private void setup() throws JMSException {
         Config.initializeProducts();
-        var orders = new Subscriber(Config.ORDER_QUEUE, processOrder);
+        orders = new Subscriber(Config.ORDER_QUEUE, processOrder);
         finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
         production = new Production();
     }
@@ -47,6 +48,9 @@ public class Factory {
         try {
             finishedOrderPublisher.publish(order);
             currentOrders.remove(order);
+            if (currentOrders.size() == maxCapacity - 1) {
+                orders.restart();
+            }
         } catch (JMSException e) {
             e.printStackTrace();
         }
@@ -59,12 +63,17 @@ public class Factory {
 
             System.out.println("Received order: " + order.toString());
             if (currentOrders.size() < maxCapacity) {
+                if (currentOrders.size() == maxCapacity - 1) {
+                    orders.pause();
+                }
                 currentOrders.add(order);
                 production.orderParts(order).thenCompose(o -> production.produce(o, this.productionTimeFactor)).thenAccept(this::reportFinishedOrder);
             } else {
-                System.out.println("Max capacity reached, didn't accept order: " + order.toString());
+                // This should never happen
+                // If it does happen, current implementation of max capacity is faulty
+                throw new IllegalStateException("Max capacity reached, didn't accept order: " + order.toString());
             }
-        } catch (Exception e) {
+        } catch (JMSException e) {
             e.printStackTrace();
         }
     };
