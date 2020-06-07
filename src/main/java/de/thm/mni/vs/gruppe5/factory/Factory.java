@@ -18,7 +18,7 @@ public class Factory {
     private float productionTimeFactor;
     private int maxCapacity;
     private List<FridgeOrder> currentOrders;
-    private Subscriber orders;
+    private Subscriber orderSubscriber;
 
     public static void main(String[] args) {
         var factory = new Factory(0.5f, 2);
@@ -38,7 +38,7 @@ public class Factory {
 
     private void setup() throws JMSException {
         Config.initializeProducts();
-        orders = new Subscriber(Config.ORDER_QUEUE, processOrder);
+        orderSubscriber = new Subscriber(Config.ORDER_QUEUE, processOrder);
         finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
         production = new Production();
     }
@@ -48,7 +48,7 @@ public class Factory {
         try {
             finishedOrderPublisher.publish(order);
             currentOrders.remove(order);
-            orders.restart();
+            orderSubscriber.restart();
         } catch (JMSException e) {
             e.printStackTrace();
         }
@@ -62,7 +62,7 @@ public class Factory {
             System.out.println("Received order: " + order.toString());
             if (currentOrders.size() < maxCapacity) {
                 if (currentOrders.size() == maxCapacity - 1) {
-                    orders.pause();
+                    orderSubscriber.pause();
                 }
                 currentOrders.add(order);
                 production.orderParts(order).thenCompose(o -> production.produce(o, this.productionTimeFactor)).thenAccept(this::reportFinishedOrder);
