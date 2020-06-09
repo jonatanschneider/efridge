@@ -36,15 +36,15 @@ services:
       ACTIVEMQ_MIN_MEMORY: 512
       ACTIVEMQ_MAX_MEMORY: 2048
 
-  #postgres-hq:
-    #image: healthcheck/postgres:alpine
-    #ports: ["5432:5432"]
-    #networks: [backing-services]
-    #volumes: ["postgres-data-hq:/var/lib/postgresql/hq/data"]
-    #environment:
-      #POSTGRES_DB: db
-      #POSTGRES_USER: user
-      #POSTGRES_PASSWORD: password
+  postgres-hq:
+    image: healthcheck/postgres:alpine
+    ports: ["5432:5432"]
+    networks: [backing-services]
+    volumes: ["postgres-data-hq:/var/lib/postgresql/hq/data"]
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
 
   postgres-us:
     image: healthcheck/postgres:alpine
