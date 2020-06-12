@@ -9,6 +9,7 @@ public class Subscriber implements AutoCloseable {
     private Queue queue;
     private MessageConsumer consumer;
     private final Session session;
+    private volatile boolean isRunning = true;
 
     /**
      * Subscribes to a channel asynchronously
@@ -37,6 +38,28 @@ public class Subscriber implements AutoCloseable {
             session.close();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public synchronized void pause() {
+        if (isRunning) {
+            try {
+                connection.stop();
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+            isRunning = false;
+        }
+    }
+
+    public synchronized void restart() {
+        if (!isRunning) {
+            try {
+                connection.start();
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+            isRunning = true;
         }
     }
 }

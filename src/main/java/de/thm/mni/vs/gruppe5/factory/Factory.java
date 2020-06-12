@@ -9,14 +9,20 @@ import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Factory {
     private IProduction production;
     private Publisher finishedOrderPublisher;
     private float productionTimeFactor;
+    private int maxCapacity;
+    private List<FridgeOrder> currentOrders;
+    private Subscriber orderSubscriber;
 
     public static void main(String[] args) {
-        var factory = new Factory(0.5f);
+        var factory = new Factory(0.5f, 2);
 
         try {
             factory.setup();
@@ -25,13 +31,15 @@ public class Factory {
         }
     }
 
-    public Factory(float productionTimeFactor) {
+    public Factory(float productionTimeFactor, int maxCapacity) {
         this.productionTimeFactor = productionTimeFactor;
+        this.maxCapacity = maxCapacity;
+        this.currentOrders = Collections.synchronizedList(new ArrayList<>(maxCapacity));
     }
 
     private void setup() throws JMSException {
         Config.initializeProducts();
-        var orders = new Subscriber(Config.ORDER_QUEUE, processOrder);
+        orderSubscriber = new Subscriber(Config.ORDER_QUEUE, processOrder);
         finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
         production = new Production();
     }
@@ -41,6 +49,8 @@ public class Factory {
         System.out.println("New Performance: " + PerformanceTracker.getInstance().toString());
         try {
             finishedOrderPublisher.publish(order);
+            currentOrders.remove(order);
+            orderSubscriber.restart();
         } catch (JMSException e) {
             e.printStackTrace();
         }
@@ -52,8 +62,18 @@ public class Factory {
             var order = (FridgeOrder) objectMessage.getObject();
 
             System.out.println("Received order: " + order.toString());
-            production.orderParts(order).thenCompose(o -> production.produce(o, this.productionTimeFactor)).thenAccept(this::reportFinishedOrder);
-        } catch (Exception e) {
+            if (currentOrders.size() < maxCapacity) {
+                if (currentOrders.size() == maxCapacity - 1) {
+                    orderSubscriber.pause();
+                }
+                currentOrders.add(order);
+                production.orderParts(order).thenCompose(o -> production.produce(o, this.productionTimeFactor)).thenAccept(this::reportFinishedOrder);
+            } else {
+                // This should never happen
+                // If it does happen, current implementation of max capacity is faulty
+                throw new IllegalStateException("Max capacity reached, didn't accept order: " + order.toString());
+            }
+        } catch (JMSException e) {
             e.printStackTrace();
         }
     };
