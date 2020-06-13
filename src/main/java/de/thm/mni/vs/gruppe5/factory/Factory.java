@@ -1,9 +1,6 @@
 package de.thm.mni.vs.gruppe5.factory;
 
-import de.thm.mni.vs.gruppe5.common.Config;
-import de.thm.mni.vs.gruppe5.common.PerformanceTracker;
-import de.thm.mni.vs.gruppe5.common.Publisher;
-import de.thm.mni.vs.gruppe5.common.Subscriber;
+import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
 
 import javax.jms.JMSException;
@@ -25,7 +22,7 @@ public class Factory {
         var factory = new Factory(0.5f, 2);
 
         try {
-            factory.setup();
+            factory.setup(Location.CHINA);
         } catch (JMSException e) {
             e.printStackTrace();
         }
@@ -37,9 +34,9 @@ public class Factory {
         this.currentOrders = Collections.synchronizedList(new ArrayList<>(maxCapacity));
     }
 
-    private void setup() throws JMSException {
-        Config.initializeProducts();
-        orderSubscriber = new Subscriber(Config.ORDER_QUEUE, processOrder);
+    private void setup(Location location) throws JMSException {
+        Config.initializeProducts(location);
+        var orders = new Subscriber(Config.ORDER_QUEUE, processOrder);
         finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
         production = new Production();
     }
