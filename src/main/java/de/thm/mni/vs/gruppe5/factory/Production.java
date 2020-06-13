@@ -63,7 +63,6 @@ public class Production implements IProduction {
                 performanceTracker.finishedOrderItem(orderItem, time);
             });
 
-            performanceTracker.finishedOrder(order);
             order.setStatus(OrderStatus.COMPLETED);
             return order;
         });

@@ -102,6 +102,8 @@ public class Factory {
 
             System.out.println("Received order: " + order.toString());
             if (currentOrders.size() < maxCapacity) {
+                PerformanceTracker.getInstance().receivedOrder(order);
+
                 if (currentOrders.size() == maxCapacity - 1) {
                     orderSubscriber.pause();
                 }

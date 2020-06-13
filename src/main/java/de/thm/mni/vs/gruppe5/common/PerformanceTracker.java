@@ -29,7 +29,7 @@ public class PerformanceTracker implements Serializable {
         producedProductsCost = 0;
     }
 
-    public void finishedOrder(FridgeOrder order) {
+    public void receivedOrder(FridgeOrder order) {
         orderCount++;
     }
 
