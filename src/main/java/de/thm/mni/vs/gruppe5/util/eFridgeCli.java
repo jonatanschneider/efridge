@@ -22,7 +22,7 @@ public class eFridgeCli {
         try {
             incomingOrderPublisher = new Publisher(Config.INCOMING_ORDER_QUEUE);
 
-            if (!args[0].equals("")) order = parseJsonFile(args[0]);
+            if (args.length > 0 && !args[0].equals("")) order = parseJsonFile(args[0]);
             else order = interactiveCreation();
 
             sendOrder(order);
