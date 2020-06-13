@@ -1,6 +1,8 @@
 package de.thm.mni.vs.gruppe5.hq;
 
+import com.google.gson.Gson;
 import de.thm.mni.vs.gruppe5.common.Config;
+import de.thm.mni.vs.gruppe5.common.FrontendOrder;
 import de.thm.mni.vs.gruppe5.common.Location;
 import de.thm.mni.vs.gruppe5.common.Publisher;
 import de.thm.mni.vs.gruppe5.common.Subscriber;
@@ -12,27 +14,26 @@ import javax.jms.ObjectMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import java.util.HashSet;
+import java.util.List;
 
 public class Headquarter implements AutoCloseable {
     private Publisher orderPublisher;
+    private List<Product> products;
     EntityManagerFactory emf = Persistence.createEntityManagerFactory("eFridge-hq");
     EntityManager em = emf.createEntityManager();
 
     public static void main(String[] args) {
-       try (var hq = new Headquarter()) {
+       try {
+           var hq = new Headquarter();
            hq.setup();
-
-           // TODO TMP: demo order
-           hq.processIncomingOrder(hq.getDemoOrder());
-
+           // TODO closing of resources
        } catch (Exception e) {
            e.printStackTrace();
        }
     }
 
     private void setup() throws JMSException {
-        Config.initializeProducts(Location.HEADQUARTER);
+        this.products = Config.initializeProducts(Location.HEADQUARTER);
         var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
         var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, messageListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
@@ -50,26 +51,36 @@ public class Headquarter implements AutoCloseable {
         em.getTransaction().commit();
     }
 
-    private FridgeOrder getDemoOrder() {
-        var set = new HashSet<OrderItem>();
-        var item = new OrderItem(em.find(Product.class, "1"), 2);
-        set.add(item);
-
-        return new FridgeOrder("customerId", set, OrderStatus.RECEIVED, false);
-    }
-
     private MessageListener incomingOrderListener = m -> {
         try {
+
             var objectMessage = (ObjectMessage) m;
-            var order = (FridgeOrder) objectMessage.getObject();
+            var frontendOrder = new Gson().fromJson((String) objectMessage.getObject(), FrontendOrder.class);
 
-            System.out.println("Received order: " + order.toString());
+            if (!frontendOrder.isValid()){
+                System.out.println("Discarding invalid order " + frontendOrder);
+                return;
+            }
 
-            processIncomingOrder(order);
+            var fridgeOrder = buildFridgeOrder(frontendOrder);
+
+            System.out.println("Received order: " + fridgeOrder.toString());
+
+            processIncomingOrder(fridgeOrder);
         } catch (Exception e) {
             e.printStackTrace();
         }
     };
+
+    private FridgeOrder buildFridgeOrder(FrontendOrder frontendOrder) {
+        var order = new FridgeOrder();
+        order.setCustomerId(frontendOrder.customerId);
+        frontendOrder.getOrderProductIdsWithQuantity().entrySet().stream()
+                .map(entry -> new OrderItem(products.get(entry.getKey() - 1), entry.getValue()))
+                .forEach(order.getOrderItems()::add);
+        order.setStatus(OrderStatus.RECEIVED);
+        return order;
+    }
 
     private MessageListener messageListener = m -> {
         if (m instanceof ObjectMessage) {

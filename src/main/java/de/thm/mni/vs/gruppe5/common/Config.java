@@ -9,9 +9,7 @@ import org.eclipse.persistence.jpa.PersistenceProvider;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class Config {
     public static final String INCOMING_ORDER_QUEUE = "incomingOrderQueue";
@@ -19,7 +17,7 @@ public class Config {
     public static final String ORDER_QUEUE = "orderQueue";
     public static final float PRODUCTION_COST_PER_SECOND = 0.5f;
 
-    public static void initializeProducts(Location location) {
+    public static List<Product> initializeProducts(Location location) {
         EntityManagerFactory emf = null;
         switch (location) {
             case HEADQUARTER -> emf = Persistence.createEntityManagerFactory("eFridge-hq");
@@ -31,8 +29,11 @@ public class Config {
 
         /* Only write products to database if they don't exist already */
         Query query = em.createQuery("SELECT p FROM Product p");
-        List queryResult = query.getResultList();
-        if (queryResult.size() == 5) return;
+        List<Product> queryResult = query.getResultList();
+        if (queryResult.size() == 5) {
+            queryResult.sort(Comparator.comparingInt(p -> Integer.parseInt(p.getId())));
+            return queryResult;
+        };
 
         var createdProducts = createProducts();
 
@@ -42,6 +43,8 @@ public class Config {
 
         em.close();
         emf.close();
+
+        return createdProducts;
     }
 
     private static List<Product> createProducts() {
