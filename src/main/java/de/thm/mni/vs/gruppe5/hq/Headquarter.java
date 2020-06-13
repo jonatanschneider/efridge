@@ -3,6 +3,7 @@ package de.thm.mni.vs.gruppe5.hq;
 import com.google.gson.Gson;
 import de.thm.mni.vs.gruppe5.common.Config;
 import de.thm.mni.vs.gruppe5.common.FrontendOrder;
+import de.thm.mni.vs.gruppe5.common.Location;
 import de.thm.mni.vs.gruppe5.common.Publisher;
 import de.thm.mni.vs.gruppe5.common.Subscriber;
 import de.thm.mni.vs.gruppe5.common.model.*;
@@ -18,7 +19,7 @@ import java.util.List;
 public class Headquarter implements AutoCloseable {
     private Publisher orderPublisher;
     private List<Product> products;
-    EntityManagerFactory emf = Persistence.createEntityManagerFactory("eFridge");
+    EntityManagerFactory emf = Persistence.createEntityManagerFactory("eFridge-hq");
     EntityManager em = emf.createEntityManager();
 
     public static void main(String[] args) {
@@ -32,7 +33,7 @@ public class Headquarter implements AutoCloseable {
     }
 
     private void setup() throws JMSException {
-        this.products = Config.initializeProducts();
+        this.products = Config.initializeProducts(Location.HEADQUARTER);
         var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
         var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, messageListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);

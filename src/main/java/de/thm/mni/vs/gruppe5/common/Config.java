@@ -4,7 +4,9 @@ import de.thm.mni.vs.gruppe5.common.model.Part;
 import de.thm.mni.vs.gruppe5.common.model.Product;
 import de.thm.mni.vs.gruppe5.common.model.ProductPart;
 import de.thm.mni.vs.gruppe5.common.model.Supplier;
+import org.eclipse.persistence.jpa.PersistenceProvider;
 
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
 import java.util.*;
@@ -15,8 +17,14 @@ public class Config {
     public static final String ORDER_QUEUE = "orderQueue";
     public static final float PRODUCTION_COST_PER_SECOND = 0.5f;
 
-    public static List<Product> initializeProducts() {
-        var emf = Persistence.createEntityManagerFactory("eFridge");
+    public static List<Product> initializeProducts(Location location) {
+        EntityManagerFactory emf = null;
+        switch (location) {
+            case HEADQUARTER -> emf = Persistence.createEntityManagerFactory("eFridge-hq");
+            case USA -> emf = Persistence.createEntityManagerFactory("eFridge-us");
+            case CHINA -> emf = Persistence.createEntityManagerFactory("eFridge-cn");
+        }
+
         var em = emf.createEntityManager();
 
         /* Only write products to database if they don't exist already */

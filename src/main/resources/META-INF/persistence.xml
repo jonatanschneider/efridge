@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence xmlns="http://java.sun.com/xml/ns/persistence" version="2.0">
 
-    <persistence-unit name="eFridge">
+    <persistence-unit name="eFridge-hq">
         <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
         <class>de.thm.mni.vs.gruppe5.common.model.FridgeOrder</class>
         <class>de.thm.mni.vs.gruppe5.common.model.Part</class>
@@ -9,7 +9,39 @@
         <class>de.thm.mni.vs.gruppe5.common.model.ProductPart</class>
         <class>de.thm.mni.vs.gruppe5.common.model.OrderItem</class>
         <properties>
-            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost/db"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/db"/>
+            <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+            <property name="javax.persistence.jdbc.user" value="user"/>
+            <property name="javax.persistence.jdbc.password" value="password"/>
+            <property name="eclipselink.ddl-generation" value="create-tables"/>
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="eFridge-us">
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <class>de.thm.mni.vs.gruppe5.common.model.FridgeOrder</class>
+        <class>de.thm.mni.vs.gruppe5.common.model.Part</class>
+        <class>de.thm.mni.vs.gruppe5.common.model.Product</class>
+        <class>de.thm.mni.vs.gruppe5.common.model.ProductPart</class>
+        <class>de.thm.mni.vs.gruppe5.common.model.OrderItem</class>
+        <properties>
+            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5433/db"/>
+            <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+            <property name="javax.persistence.jdbc.user" value="user"/>
+            <property name="javax.persistence.jdbc.password" value="password"/>
+            <property name="eclipselink.ddl-generation" value="create-tables"/>
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="eFridge-cn">
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <class>de.thm.mni.vs.gruppe5.common.model.FridgeOrder</class>
+        <class>de.thm.mni.vs.gruppe5.common.model.Part</class>
+        <class>de.thm.mni.vs.gruppe5.common.model.Product</class>
+        <class>de.thm.mni.vs.gruppe5.common.model.ProductPart</class>
+        <class>de.thm.mni.vs.gruppe5.common.model.OrderItem</class>
+        <properties>
+            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5434/db"/>
             <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
             <property name="javax.persistence.jdbc.user" value="user"/>
             <property name="javax.persistence.jdbc.password" value="password"/>
