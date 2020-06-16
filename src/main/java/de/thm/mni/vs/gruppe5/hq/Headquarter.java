@@ -14,6 +14,7 @@ import javax.jms.ObjectMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import java.util.Date;
 import java.util.List;
 
 public class Headquarter implements AutoCloseable {
@@ -48,6 +49,12 @@ public class Headquarter implements AutoCloseable {
     private void persist(FridgeOrder order) {
         em.getTransaction().begin();
         em.persist(order);
+        em.getTransaction().commit();
+    }
+
+    private void persist(SupportTicket ticket) {
+        em.getTransaction().begin();
+        em.persist(ticket);
         em.getTransaction().commit();
     }
 
