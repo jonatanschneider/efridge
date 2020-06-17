@@ -16,26 +16,28 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import java.util.List;
 
-public class Headquarter implements AutoCloseable {
+public class Headquarter {
     private Publisher orderPublisher;
+    private Subscriber incomingOrdersSubscriber;
+    private Subscriber finishedOrdersSubscriber;
     private List<Product> products;
-    EntityManagerFactory emf = Persistence.createEntityManagerFactory("eFridge-hq");
-    EntityManager em = emf.createEntityManager();
+    private final EntityManagerFactory emf = Persistence.createEntityManagerFactory("eFridge-hq");
+    private final EntityManager em = emf.createEntityManager();
 
     public static void main(String[] args) {
        try {
            var hq = new Headquarter();
            hq.setup();
-           // TODO closing of resources
+           Runtime.getRuntime().addShutdownHook(hq.closeResources());
        } catch (Exception e) {
            e.printStackTrace();
        }
     }
 
     private void setup() throws JMSException {
-        this.products = Config.initializeProducts(Location.HEADQUARTER);
-        var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
-        var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, messageListener);
+        products = Config.initializeProducts(Location.HEADQUARTER);
+        incomingOrdersSubscriber = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
+        finishedOrdersSubscriber = new Subscriber(Config.FINISHED_ORDER_QUEUE, messageListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
     }
 
@@ -89,9 +91,16 @@ public class Headquarter implements AutoCloseable {
         }
     };
 
-    @Override
-    public void close() throws Exception {
-        em.close();
-        emf.close();
+    private Thread closeResources() {
+        return new Thread(() -> {
+            System.out.println("Shutdown headquarter");
+            System.out.println("Closing database connections");
+            em.close();
+            emf.close();
+            System.out.println("Closing ActiveMQ connections");
+            orderPublisher.close();
+            finishedOrdersSubscriber.close();
+            incomingOrdersSubscriber.close();
+        });
     }
 }
