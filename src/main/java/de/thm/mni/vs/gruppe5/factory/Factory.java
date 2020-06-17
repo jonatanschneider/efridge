@@ -23,6 +23,7 @@ public class Factory {
 
         try {
             factory.setup(Location.CHINA);
+            Runtime.getRuntime().addShutdownHook(factory.closeResources());
         } catch (JMSException e) {
             e.printStackTrace();
         }
@@ -36,7 +37,7 @@ public class Factory {
 
     private void setup(Location location) throws JMSException {
         Config.initializeProducts(location);
-        var orders = new Subscriber(Config.ORDER_QUEUE, processOrder);
+        orderSubscriber = new Subscriber(Config.ORDER_QUEUE, processOrder);
         finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
         production = new Production();
     }
@@ -74,4 +75,13 @@ public class Factory {
             e.printStackTrace();
         }
     };
+
+    private Thread closeResources() {
+        return new Thread(() -> {
+            System.out.println("Shutdown headquarter");
+            System.out.println("Closing ActiveMQ connections");
+            finishedOrderPublisher.close();
+            orderSubscriber.close();
+        });
+    }
 }
