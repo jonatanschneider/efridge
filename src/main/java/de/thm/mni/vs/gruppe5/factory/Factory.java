@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class Factory {
+    private Location location;
     private IProduction production;
     private Publisher finishedOrderPublisher;
     private float productionTimeFactor;
@@ -19,22 +20,56 @@ public class Factory {
     private Subscriber orderSubscriber;
 
     public static void main(String[] args) {
-        var factory = new Factory(0.5f, 2);
+        Location location;
+        float productionTimeFactor = 0;
+        int maxCapacity = 0;
+
+        if (args.length != 3) {
+            System.err.println("Invalid number of program arguments");
+            System.err.println("Usage: Factory <LOCATION> <productionTimeFactor> <maxCapacity>");
+            return;
+        }
+
+        switch (args[0]) {
+            case "USA" -> location = Location.USA;
+            case "CHINA" -> location = Location.CHINA;
+            default -> {
+                System.err.println("Invalid location " + args[0]);
+                System.err.println("Valid locations are 'USA', 'CHINA'");
+                System.err.println("Usage: Factory <LOCATION> <productionTimeFactor> <maxCapacity>");
+                return;
+            }
+        }
 
         try {
-            factory.setup(Location.CHINA);
+            productionTimeFactor = Float.parseFloat(args[1]);
+            maxCapacity = Integer.parseInt(args[2]);
+        } catch (Exception e) {
+            System.err.println("Invalid production time factor or max capacity");
+            System.err.println("Usage: Factory <LOCATION> <productionTimeFactor> <maxCapacity>");
+            return;
+        }
+
+        var factory = new Factory(location, productionTimeFactor, maxCapacity);
+
+        try {
+            factory.setup();
         } catch (JMSException e) {
             e.printStackTrace();
         }
     }
 
-    public Factory(float productionTimeFactor, int maxCapacity) {
+    public Factory(Location location, float productionTimeFactor, int maxCapacity) {
+        this.location = location;
         this.productionTimeFactor = productionTimeFactor;
         this.maxCapacity = maxCapacity;
         this.currentOrders = Collections.synchronizedList(new ArrayList<>(maxCapacity));
+        System.out.println("Factory - " + location.name()
+                + " - productionTimeFactor: " + productionTimeFactor
+                + " - maxCapacity: " + maxCapacity);
     }
 
-    private void setup(Location location) throws JMSException {
+    private void setup() throws JMSException {
         Config.initializeProducts(location);
         var orders = new Subscriber(Config.ORDER_QUEUE, processOrder);
         finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
