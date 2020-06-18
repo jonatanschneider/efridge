@@ -67,7 +67,7 @@ public class Headquarter implements AutoCloseable {
         em.getTransaction().commit();
     }
 
-    private MessageListener incomingOrderListener = m -> {
+    private final MessageListener incomingOrderListener = m -> {
         try {
 
             var objectMessage = (ObjectMessage) m;
@@ -88,7 +88,7 @@ public class Headquarter implements AutoCloseable {
         }
     };
 
-    private MessageListener incomingTicketListener= m -> {
+    private final MessageListener incomingTicketListener= m -> {
         try {
 
             var objectMessage = (ObjectMessage) m;
@@ -114,7 +114,7 @@ public class Headquarter implements AutoCloseable {
         return order;
     }
 
-    private MessageListener messageListener = m -> {
+    private final MessageListener messageListener = m -> {
         if (m instanceof ObjectMessage) {
             var objectMessage = (ObjectMessage) m;
             System.out.println(objectMessage.toString());
