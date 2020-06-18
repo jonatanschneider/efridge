@@ -1,30 +1,38 @@
 package de.thm.mni.vs.gruppe5.util;
 
-import com.google.gson.Gson;
-import de.thm.mni.vs.gruppe5.common.Config;
-import de.thm.mni.vs.gruppe5.common.FrontendItem;
-import de.thm.mni.vs.gruppe5.common.FrontendOrder;
-import de.thm.mni.vs.gruppe5.common.Publisher;
+import de.thm.mni.vs.gruppe5.common.*;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.Scanner;
 
 public class eFridgeCli {
-    private static Publisher incomingOrderPublisher;
-    private static Publisher incomingTicketPublisher;
 
     public static void main(String[] args) {
-        FrontendItem item;
+        FrontendItem item = null;
+        Class<? extends FrontendItem> type;
 
         try {
-            incomingOrderPublisher = new Publisher(Config.INCOMING_ORDER_QUEUE);
-            incomingTicketPublisher = new Publisher(Config.INCOMING_TICKET_QUEUE);
+            var incomingOrderPublisher = new Publisher(Config.INCOMING_ORDER_QUEUE);
+            var incomingTicketPublisher = new Publisher(Config.INCOMING_TICKET_QUEUE);
+            var scanner = new Scanner(System.in);
 
-            if (args.length > 0 && !args[0].isBlank()) item = FrontendItem.parseJsonFile(args[0], FrontendOrder.class);
-            else item = new FrontendOrder().interactiveCreation();
-
-            item.send(incomingOrderPublisher);
+            if (args.length > 1 && !args[0].isBlank() && !args[1].isBlank()) {
+                if (args[0].toLowerCase().trim().equals("order")) type = FrontendOrder.class;
+                else if (args[0].toLowerCase().trim().equals("ticket")) type = FrontendTicket.class;
+                else throw new IllegalArgumentException("Invalid publisher type: " + args[0]);
+                item = FrontendItem.parseJsonFile(args[1], type);
+            } else {
+                do {
+                    System.out.println("Select type (order, ticket)");
+                    var line = scanner.nextLine().toLowerCase().trim();
+                    if (line.equals("order")) {
+                        item = new FrontendOrder().interactiveCreation();
+                        item.send(incomingOrderPublisher);
+                    } else if (line.equals("ticket")) {
+                        item = new FrontendTicket().interactiveCreation();
+                        item.send(incomingTicketPublisher);
+                    }
+                } while (item == null);
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
