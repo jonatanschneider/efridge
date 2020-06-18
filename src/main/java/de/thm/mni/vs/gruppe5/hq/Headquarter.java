@@ -38,6 +38,7 @@ public class Headquarter implements AutoCloseable {
         var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
         var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, messageListener);
         var incomingTickets = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
+        var finishedTickets = new Subscriber(Config.FINISHED_TICKET_QUEUE, messageListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
         ticketPublisher = new Publisher(Config.TICKET_QUEUE);
     }
