@@ -1,11 +1,7 @@
 package de.thm.mni.vs.gruppe5.hq;
 
 import com.google.gson.Gson;
-import de.thm.mni.vs.gruppe5.common.Config;
-import de.thm.mni.vs.gruppe5.common.FrontendOrder;
-import de.thm.mni.vs.gruppe5.common.Location;
-import de.thm.mni.vs.gruppe5.common.Publisher;
-import de.thm.mni.vs.gruppe5.common.Subscriber;
+import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.*;
 
 import javax.jms.JMSException;
@@ -50,7 +46,7 @@ public class Headquarter implements AutoCloseable {
     }
 
     private void processIncomingTicket(SupportTicket ticket) throws JMSException {
-        System.out.println("Send ticket to factories: " + ticket.toString());
+        System.out.println("Send ticket to support centers: " + ticket.toString());
         persist(ticket);
         ticketPublisher.publish(ticket);
     }
@@ -88,15 +84,20 @@ public class Headquarter implements AutoCloseable {
         }
     };
 
-    private final MessageListener incomingTicketListener= m -> {
+    private final MessageListener incomingTicketListener = m -> {
         try {
 
             var objectMessage = (ObjectMessage) m;
-            var supportTicket = new Gson().fromJson((String) objectMessage.getObject(), SupportTicket.class);
+            var frontendTicket = new Gson().fromJson((String) objectMessage.getObject(), FrontendTicket.class);
 
-            // TODO: Validation?
+            if (!frontendTicket.isValid()){
+                System.out.println("Discarding invalid order " + frontendTicket);
+                return;
+            }
 
-            System.out.println("Received support ticket: " + supportTicket.toString());
+            var supportTicket = buildSupportTicket(frontendTicket);
+
+            System.out.println("Received support ticket: " + frontendTicket.toString());
 
             processIncomingTicket(supportTicket);
         } catch (Exception e) {
@@ -112,6 +113,16 @@ public class Headquarter implements AutoCloseable {
                 .forEach(order.getOrderItems()::add);
         order.setStatus(OrderStatus.RECEIVED);
         return order;
+    }
+
+    private SupportTicket buildSupportTicket(FrontendTicket frontendTicket) {
+        var ticket = new SupportTicket();
+        ticket.setCustomerId(frontendTicket.customerId);
+        ticket.setCreationTime(frontendTicket.creationTime);
+        ticket.setClosingTime(frontendTicket.closingTime);
+        ticket.setClosed(frontendTicket.isClosed);
+        ticket.setText(frontendTicket.text);
+        return ticket;
     }
 
     private final MessageListener messageListener = m -> {
