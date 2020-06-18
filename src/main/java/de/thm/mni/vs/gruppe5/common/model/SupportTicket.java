@@ -1,10 +1,11 @@
 package de.thm.mni.vs.gruppe5.common.model;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.Date;
 
 @Entity
-public class SupportTicket {
+public class SupportTicket implements Serializable {
     @Id
     @GeneratedValue
     private String id;
