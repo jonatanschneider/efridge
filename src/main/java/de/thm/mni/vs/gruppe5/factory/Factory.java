@@ -80,12 +80,11 @@ public class Factory {
         reportPublisher = new Publisher(Config.REPORT_QUEUE);
 
         var reportTask = new ReportTask(reportPublisher);
-        new Timer().scheduleAtFixedRate(reportTask, 0, Config.REPORT_INTERVAL * 1000);
+        new Timer().scheduleAtFixedRate(reportTask, 0, reportTask.getPeriod());
     }
 
     private void reportFinishedOrder(FridgeOrder order) {
         System.out.println("Finished order " + order.toString());
-        System.out.println("New Performance: " + PerformanceTracker.getInstance().toString());
         try {
             finishedOrderPublisher.publish(order);
             currentOrders.remove(order);

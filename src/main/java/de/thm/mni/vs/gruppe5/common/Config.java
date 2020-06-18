@@ -17,7 +17,8 @@ public class Config {
     public static final String ORDER_QUEUE = "orderQueue";
     public static final String REPORT_QUEUE = "reportQueue";
     public static final float PRODUCTION_COST_PER_SECOND = 0.5f;
-    public static final long REPORT_INTERVAL = 10;
+    public static final long DAY_DURATION_IN_SECONDS = 60;
+    public static final long REPORTS_PER_DAY = 4;
 
     public static List<Product> initializeProducts(Location location) {
         EntityManagerFactory emf = null;
