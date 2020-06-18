@@ -14,11 +14,11 @@ import javax.jms.ObjectMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import java.util.Date;
 import java.util.List;
 
 public class Headquarter implements AutoCloseable {
     private Publisher orderPublisher;
+    private Publisher ticketPublisher;
     private List<Product> products;
     EntityManagerFactory emf = Persistence.createEntityManagerFactory("eFridge-hq");
     EntityManager em = emf.createEntityManager();
@@ -39,12 +39,19 @@ public class Headquarter implements AutoCloseable {
         var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, messageListener);
         var incomingTickets = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
+        ticketPublisher = new Publisher(Config.TICKET_QUEUE);
     }
 
     private void processIncomingOrder(FridgeOrder order) throws JMSException {
         System.out.println("Send order to factories: " + order.toString());
         persist(order);
         orderPublisher.publish(order);
+    }
+
+    private void processIncomingTicket(SupportTicket ticket) throws JMSException {
+        System.out.println("Send ticket to factories: " + ticket.toString());
+        persist(ticket);
+        ticketPublisher.publish(ticket);
     }
 
     private void persist(FridgeOrder order) {
@@ -86,8 +93,11 @@ public class Headquarter implements AutoCloseable {
             var objectMessage = (ObjectMessage) m;
             var supportTicket = new Gson().fromJson((String) objectMessage.getObject(), SupportTicket.class);
 
+            // TODO: Validation?
+
             System.out.println("Received support ticket: " + supportTicket.toString());
 
+            processIncomingTicket(supportTicket);
         } catch (Exception e) {
             e.printStackTrace();
         }

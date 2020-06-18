@@ -16,6 +16,7 @@ public class Config {
     public static final String INCOMING_TICKET_QUEUE = "incomingTicketQueue";
     public static final String FINISHED_ORDER_QUEUE = "finishedOrderQueue";
     public static final String ORDER_QUEUE = "orderQueue";
+    public static final String TICKET_QUEUE = "ticketQueue";
     public static final float PRODUCTION_COST_PER_SECOND = 0.5f;
 
     public static List<Product> initializeProducts(Location location) {
