@@ -3,16 +3,17 @@ package de.thm.mni.vs.gruppe5.common;
 import com.google.gson.Gson;
 
 import javax.jms.JMSException;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Scanner;
 
 public class FrontendTicket implements FrontendItem {
-    private String customerId;
-    private Date creationTime;
-    private boolean isClosed;
-    private Date closingTime;
-    private String text;
+    public String customerId;
+    public Date creationTime;
+    public boolean isClosed;
+    public Date closingTime;
+    public String text;
 
     @Override
     public boolean isValid() {
@@ -28,7 +29,16 @@ public class FrontendTicket implements FrontendItem {
         System.out.println("Enter customer id");
         customerId = scanner.nextLine();
 
-        // TODO: Add more stuff
+        System.out.println("Enter text");
+        text = "";
+        String line;
+        do {
+            line = scanner.nextLine().trim() + "\n";
+            text += line;
+        } while (!line.isBlank());
+        text = text.trim();
+        creationTime = new Date(System.currentTimeMillis());
+        isClosed = false;
 
         return this;
     }
