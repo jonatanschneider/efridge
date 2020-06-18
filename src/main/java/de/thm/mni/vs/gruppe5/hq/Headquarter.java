@@ -37,6 +37,7 @@ public class Headquarter implements AutoCloseable {
         this.products = Config.initializeProducts(Location.HEADQUARTER);
         var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
         var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, messageListener);
+        var incomingTickets = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
     }
 
@@ -74,6 +75,19 @@ public class Headquarter implements AutoCloseable {
             System.out.println("Received order: " + fridgeOrder.toString());
 
             processIncomingOrder(fridgeOrder);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    };
+
+    private MessageListener incomingTicketListener= m -> {
+        try {
+
+            var objectMessage = (ObjectMessage) m;
+            var supportTicket = new Gson().fromJson((String) objectMessage.getObject(), SupportTicket.class);
+
+            System.out.println("Received support ticket: " + supportTicket.toString());
+
         } catch (Exception e) {
             e.printStackTrace();
         }
