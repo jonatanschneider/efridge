@@ -36,6 +36,7 @@ services:
       ACTIVEMQ_MIN_MEMORY: 512
       ACTIVEMQ_MAX_MEMORY: 2048
 
+# HEADQUARTER Database, port: 5432
   postgres-hq:
     image: healthcheck/postgres:alpine
     ports: ["5432:5432"]
@@ -46,6 +47,7 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
 
+# USA Factory Database, port: 5433
   postgres-us:
     image: healthcheck/postgres:alpine
     ports: ["5433:5432"]
@@ -56,6 +58,7 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
 
+# CHINA Factory Database, port: 5434
   postgres-cn:
     image: healthcheck/postgres:alpine
     ports: ["5434:5432"]
@@ -66,11 +69,35 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
 
+# MEXICO Support Center Database, port: 5435
+  postgres-mx:
+    image: healthcheck/postgres:alpine
+    ports: ["5435:5432"]
+    networks: [backing-services]
+    volumes: ["postgres-data-mx:/var/lib/postgresql/mx/data"]
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+
+# INDIA Support Center Database, port: 5436
+  postgres-in:
+    image: healthcheck/postgres:alpine
+    ports: ["5436:5432"]
+    networks: [backing-services]
+    volumes: ["postgres-data-in:/var/lib/postgresql/in/data"]
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+
 volumes:
   activemq-data: {}
   postgres-data-hq: {}
   postgres-data-us: {}
   postgres-data-cn: {}
+  postgres-data-mx: {}
+  postgres-data-in: {}
 
 networks:
   backing-services:
