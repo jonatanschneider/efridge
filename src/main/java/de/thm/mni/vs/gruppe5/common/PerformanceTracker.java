@@ -3,7 +3,9 @@ package de.thm.mni.vs.gruppe5.common;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
 import de.thm.mni.vs.gruppe5.common.model.OrderItem;
 
-public class PerformanceTracker {
+import java.io.Serializable;
+
+public class PerformanceTracker implements Serializable {
     private int orderCount;
     private int producedProductsCount;
     private float producedProductsCost;
@@ -27,7 +29,7 @@ public class PerformanceTracker {
         producedProductsCost = 0;
     }
 
-    public void finishedOrder(FridgeOrder order) {
+    public void receivedOrder(FridgeOrder order) {
         orderCount++;
     }
 
