@@ -1,7 +1,7 @@
 package de.thm.mni.vs.gruppe5.factory;
 
 import de.thm.mni.vs.gruppe5.common.PerformanceTracker;
-import de.thm.mni.vs.gruppe5.common.TimeHelper;
+import de.thm.mni.vs.gruppe5.util.TimeHelper;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
 import de.thm.mni.vs.gruppe5.common.model.OrderStatus;
 
