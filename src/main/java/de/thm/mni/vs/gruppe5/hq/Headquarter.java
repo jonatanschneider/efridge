@@ -1,11 +1,7 @@
 package de.thm.mni.vs.gruppe5.hq;
 
 import com.google.gson.Gson;
-import de.thm.mni.vs.gruppe5.common.Config;
-import de.thm.mni.vs.gruppe5.common.FrontendOrder;
-import de.thm.mni.vs.gruppe5.common.Location;
-import de.thm.mni.vs.gruppe5.common.Publisher;
-import de.thm.mni.vs.gruppe5.common.Subscriber;
+import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.*;
 
 import javax.jms.JMSException;
@@ -14,11 +10,11 @@ import javax.jms.ObjectMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import java.util.Date;
 import java.util.List;
 
 public class Headquarter implements AutoCloseable {
     private Publisher orderPublisher;
+    private Publisher ticketPublisher;
     private List<Product> products;
     EntityManagerFactory emf = Persistence.createEntityManagerFactory("eFridge-hq");
     EntityManager em = emf.createEntityManager();
@@ -37,13 +33,22 @@ public class Headquarter implements AutoCloseable {
         this.products = Config.initializeProducts(Location.HEADQUARTER);
         var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
         var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, messageListener);
+        var incomingTickets = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
+        var finishedTickets = new Subscriber(Config.FINISHED_TICKET_QUEUE, messageListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
+        ticketPublisher = new Publisher(Config.TICKET_QUEUE);
     }
 
     private void processIncomingOrder(FridgeOrder order) throws JMSException {
         System.out.println("Send order to factories: " + order.toString());
         persist(order);
         orderPublisher.publish(order);
+    }
+
+    private void processIncomingTicket(SupportTicket ticket) throws JMSException {
+        System.out.println("Send ticket to support centers: " + ticket.toString());
+        persist(ticket);
+        ticketPublisher.publish(ticket);
     }
 
     private void persist(FridgeOrder order) {
@@ -58,7 +63,7 @@ public class Headquarter implements AutoCloseable {
         em.getTransaction().commit();
     }
 
-    private MessageListener incomingOrderListener = m -> {
+    private final MessageListener incomingOrderListener = m -> {
         try {
 
             var objectMessage = (ObjectMessage) m;
@@ -79,6 +84,27 @@ public class Headquarter implements AutoCloseable {
         }
     };
 
+    private final MessageListener incomingTicketListener = m -> {
+        try {
+
+            var objectMessage = (ObjectMessage) m;
+            var frontendTicket = new Gson().fromJson((String) objectMessage.getObject(), FrontendTicket.class);
+
+            if (!frontendTicket.isValid()){
+                System.out.println("Discarding invalid order " + frontendTicket);
+                return;
+            }
+
+            var supportTicket = buildSupportTicket(frontendTicket);
+
+            System.out.println("Received support ticket: " + frontendTicket.toString());
+
+            processIncomingTicket(supportTicket);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    };
+
     private FridgeOrder buildFridgeOrder(FrontendOrder frontendOrder) {
         var order = new FridgeOrder();
         order.setCustomerId(frontendOrder.customerId);
@@ -89,7 +115,17 @@ public class Headquarter implements AutoCloseable {
         return order;
     }
 
-    private MessageListener messageListener = m -> {
+    private SupportTicket buildSupportTicket(FrontendTicket frontendTicket) {
+        var ticket = new SupportTicket();
+        ticket.setCustomerId(frontendTicket.customerId);
+        ticket.setCreationTime(frontendTicket.creationTime);
+        ticket.setClosingTime(frontendTicket.closingTime);
+        ticket.setClosed(frontendTicket.isClosed);
+        ticket.setText(frontendTicket.text);
+        return ticket;
+    }
+
+    private final MessageListener messageListener = m -> {
         if (m instanceof ObjectMessage) {
             var objectMessage = (ObjectMessage) m;
             System.out.println(objectMessage.toString());
