@@ -77,4 +77,20 @@ public class SupportTicket implements Serializable {
     public void setText(String text) {
         this.text = text;
     }
+
+    public void appendText(String text) {
+        this.text += "\n--------------\n" + text;
+    }
+
+    @Override
+    public String toString() {
+        return "SupportTicket{" +
+                "id='" + id + '\'' +
+                ", customerId='" + customerId + '\'' +
+                ", isClosed=" + isClosed +
+                ", creationTime=" + creationTime +
+                ", closingTime=" + closingTime +
+                ", text='" + text + '\'' +
+                '}';
+    }
 }
