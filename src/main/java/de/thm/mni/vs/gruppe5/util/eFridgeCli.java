@@ -16,10 +16,16 @@ public class eFridgeCli {
             var scanner = new Scanner(System.in);
 
             if (args.length > 1 && !args[0].isBlank() && !args[1].isBlank()) {
-                if (args[0].toLowerCase().trim().equals("order")) type = FrontendOrder.class;
-                else if (args[0].toLowerCase().trim().equals("ticket")) type = FrontendTicket.class;
+                if (args[0].toLowerCase().trim().equals("order")) {
+                    item = FrontendItem.parseJsonFile(args[1], FrontendOrder.class);
+                    item.send(incomingOrderPublisher);
+                }
+                else if (args[0].toLowerCase().trim().equals("ticket")) {
+                    item = FrontendItem.parseJsonFile(args[1], FrontendTicket.class);
+                    item.send(incomingTicketPublisher);
+                }
                 else throw new IllegalArgumentException("Invalid publisher type: " + args[0]);
-                item = FrontendItem.parseJsonFile(args[1], type);
+
             } else {
                 do {
                     System.out.println("Select type (order, ticket)");
