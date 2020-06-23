@@ -2,6 +2,7 @@ package de.thm.mni.vs.gruppe5.factory;
 
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
+import de.thm.mni.vs.gruppe5.factory.report.ReportTask;
 
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
@@ -9,11 +10,13 @@ import javax.jms.ObjectMessage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Timer;
 
 public class Factory {
     private Location location;
     private IProduction production;
     private Publisher finishedOrderPublisher;
+    private Publisher reportPublisher;
     private float productionTimeFactor;
     private int maxCapacity;
     private List<FridgeOrder> currentOrders;
@@ -75,11 +78,14 @@ public class Factory {
         orderSubscriber = new Subscriber(Config.ORDER_QUEUE, processOrder);
         finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
         production = new Production();
+        reportPublisher = new Publisher(Config.REPORT_QUEUE);
+
+        var reportTask = new ReportTask(reportPublisher);
+        new Timer().scheduleAtFixedRate(reportTask, 0, reportTask.getPeriod());
     }
 
     private void reportFinishedOrder(FridgeOrder order) {
         System.out.println("Finished order " + order.toString());
-        System.out.println("New Performance: " + PerformanceTracker.getInstance().toString());
         try {
             finishedOrderPublisher.publish(order);
             currentOrders.remove(order);
@@ -96,6 +102,8 @@ public class Factory {
 
             System.out.println("Received order: " + order.toString());
             if (currentOrders.size() < maxCapacity) {
+                PerformanceTracker.getInstance().receivedOrder(order);
+
                 if (currentOrders.size() == maxCapacity - 1) {
                     orderSubscriber.pause();
                 }

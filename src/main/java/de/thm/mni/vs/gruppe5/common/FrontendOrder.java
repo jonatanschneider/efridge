@@ -1,9 +1,13 @@
 package de.thm.mni.vs.gruppe5.common;
 
-import java.util.Map;
-import java.util.function.Predicate;
+import com.google.gson.Gson;
 
-public class FrontendOrder {
+import javax.jms.JMSException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
+public class FrontendOrder implements FrontendItem {
     public String customerId;
 
     public Map<Integer, Integer> orderProductIdsWithQuantity;
@@ -24,12 +28,52 @@ public class FrontendOrder {
         this.orderProductIdsWithQuantity = orderProductIdsWithQuantity;
     }
 
+    @Override
     public boolean isValid() {
         return getOrderProductIdsWithQuantity().entrySet().stream()
                 .anyMatch(entrySet ->
                         entrySet.getKey() >= 0 &&
                         entrySet.getKey() < 5 &&
                         entrySet.getValue() > 0);
+    }
+
+    @Override
+    public FrontendItem interactiveCreation() {
+        var scanner = new Scanner(System.in);
+        var productIdsWithQuantity = new HashMap<Integer, Integer>();
+
+        System.out.println("Enter customer id");
+        setCustomerId(scanner.nextLine());
+
+        var addProduct = true;
+        do {
+            System.out.println("Select product (1-5)");
+            var productId = scanner.nextInt();
+            scanner.nextLine();
+
+            System.out.println("Enter quantity");
+            var quantity = scanner.nextInt();
+            productIdsWithQuantity.put(productId, quantity);
+            scanner.nextLine();
+
+            System.out.println("Add another product? y/n");
+            var answer = scanner.nextLine();
+            addProduct = answer.trim().toLowerCase().equals("y");
+
+        } while (addProduct);
+
+        this.setOrderProductIdsWithQuantity(productIdsWithQuantity);
+        return this;
+    }
+
+    @Override
+    public void send(Publisher p) throws JMSException {
+        if (!this.isValid()) {
+            System.out.println("Order is invalid, not publishing");
+            return;
+        }
+        System.out.println("Publish " + toString());
+        p.publish(new Gson().toJson(this));
     }
 
     @Override

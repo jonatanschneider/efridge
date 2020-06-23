@@ -1,11 +1,7 @@
 package de.thm.mni.vs.gruppe5.hq;
 
 import com.google.gson.Gson;
-import de.thm.mni.vs.gruppe5.common.Config;
-import de.thm.mni.vs.gruppe5.common.FrontendOrder;
-import de.thm.mni.vs.gruppe5.common.Location;
-import de.thm.mni.vs.gruppe5.common.Publisher;
-import de.thm.mni.vs.gruppe5.common.Subscriber;
+import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.*;
 
 import javax.jms.JMSException;
@@ -20,6 +16,7 @@ public class Headquarter {
     private Publisher orderPublisher;
     private Subscriber incomingOrdersSubscriber;
     private Subscriber finishedOrdersSubscriber;
+    private Publisher ticketPublisher;
     private List<Product> products;
     private final EntityManagerFactory emf = Persistence.createEntityManagerFactory("eFridge-hq");
     private final EntityManager em = emf.createEntityManager();
@@ -35,10 +32,13 @@ public class Headquarter {
     }
 
     private void setup() throws JMSException {
-        products = Config.initializeProducts(Location.HEADQUARTER);
-        incomingOrdersSubscriber = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
-        finishedOrdersSubscriber = new Subscriber(Config.FINISHED_ORDER_QUEUE, messageListener);
+        this.products = Config.initializeProducts(Location.HEADQUARTER);
+        var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
+        var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, messageListener);
+        var incomingTickets = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
+        var finishedTickets = new Subscriber(Config.FINISHED_TICKET_QUEUE, messageListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
+        ticketPublisher = new Publisher(Config.TICKET_QUEUE);
     }
 
     private void processIncomingOrder(FridgeOrder order) throws JMSException {
@@ -47,13 +47,25 @@ public class Headquarter {
         orderPublisher.publish(order);
     }
 
+    private void processIncomingTicket(SupportTicket ticket) throws JMSException {
+        System.out.println("Send ticket to support centers: " + ticket.toString());
+        persist(ticket);
+        ticketPublisher.publish(ticket);
+    }
+
     private void persist(FridgeOrder order) {
         em.getTransaction().begin();
         em.persist(order);
         em.getTransaction().commit();
     }
 
-    private MessageListener incomingOrderListener = m -> {
+    private void persist(SupportTicket ticket) {
+        em.getTransaction().begin();
+        em.persist(ticket);
+        em.getTransaction().commit();
+    }
+
+    private final MessageListener incomingOrderListener = m -> {
         try {
 
             var objectMessage = (ObjectMessage) m;
@@ -74,6 +86,27 @@ public class Headquarter {
         }
     };
 
+    private final MessageListener incomingTicketListener = m -> {
+        try {
+
+            var objectMessage = (ObjectMessage) m;
+            var frontendTicket = new Gson().fromJson((String) objectMessage.getObject(), FrontendTicket.class);
+
+            if (!frontendTicket.isValid()){
+                System.out.println("Discarding invalid order " + frontendTicket);
+                return;
+            }
+
+            var supportTicket = buildSupportTicket(frontendTicket);
+
+            System.out.println("Received support ticket: " + frontendTicket.toString());
+
+            processIncomingTicket(supportTicket);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    };
+
     private FridgeOrder buildFridgeOrder(FrontendOrder frontendOrder) {
         var order = new FridgeOrder();
         order.setCustomerId(frontendOrder.customerId);
@@ -84,7 +117,17 @@ public class Headquarter {
         return order;
     }
 
-    private MessageListener messageListener = m -> {
+    private SupportTicket buildSupportTicket(FrontendTicket frontendTicket) {
+        var ticket = new SupportTicket();
+        ticket.setCustomerId(frontendTicket.customerId);
+        ticket.setCreationTime(frontendTicket.creationTime);
+        ticket.setClosingTime(frontendTicket.closingTime);
+        ticket.setClosed(frontendTicket.isClosed);
+        ticket.setText(frontendTicket.text);
+        return ticket;
+    }
+
+    private final MessageListener messageListener = m -> {
         if (m instanceof ObjectMessage) {
             var objectMessage = (ObjectMessage) m;
             System.out.println(objectMessage.toString());
