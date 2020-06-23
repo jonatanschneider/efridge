@@ -8,7 +8,6 @@ public class eFridgeCli {
 
     public static void main(String[] args) {
         FrontendItem item = null;
-        Class<? extends FrontendItem> type;
 
         try {
             var incomingOrderPublisher = new Publisher(Config.INCOMING_ORDER_QUEUE);
