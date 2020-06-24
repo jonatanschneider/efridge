@@ -24,7 +24,6 @@ public class SupportTicket implements Serializable {
     @Column(length = 5000)
     private String text;
 
-
     public SupportTicket() {
 
     }
