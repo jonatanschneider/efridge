@@ -20,7 +20,10 @@ public class SupportTicket implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date closingTime;
 
+    // Use length of 5000 characters, as jpa doesnt allow to simply set the number to the maximum
+    @Column(length = 5000)
     private String text;
+
 
     public SupportTicket() {
 
