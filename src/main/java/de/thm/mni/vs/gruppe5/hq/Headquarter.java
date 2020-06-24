@@ -36,7 +36,7 @@ public class Headquarter {
     private void setup() throws JMSException {
         this.products = Config.initializeProducts(Location.HEADQUARTER);
         var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
-        var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, messageListener);
+        var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
         var incomingTickets = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
         var finishedTickets = new Subscriber(Config.FINISHED_TICKET_QUEUE, messageListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
@@ -116,6 +116,20 @@ public class Headquarter {
         ticket.setText(frontendTicket.text);
         return ticket;
     }
+
+    private final MessageListener finishedOrderListener = m -> {
+        if (m instanceof ObjectMessage) {
+            try {
+                var object = ((ObjectMessage) m).getObject();
+                if (object instanceof FridgeOrder) {
+                    System.out.println("Received finished order" + object);
+                    DatabaseUtility.merge(em, object);
+                }
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+        }
+    };
 
     private final MessageListener messageListener = m -> {
         if (m instanceof ObjectMessage) {
