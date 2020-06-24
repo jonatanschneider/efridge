@@ -4,6 +4,7 @@ import de.thm.mni.vs.gruppe5.common.model.Part;
 import de.thm.mni.vs.gruppe5.common.model.Product;
 import de.thm.mni.vs.gruppe5.common.model.ProductPart;
 import de.thm.mni.vs.gruppe5.common.model.Supplier;
+import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -42,10 +43,7 @@ public class Config {
         };
 
         var createdProducts = createProducts();
-
-        em.getTransaction().begin();
-        createdProducts.forEach(em::persist);
-        em.getTransaction().commit();
+        createdProducts.forEach(p -> DatabaseUtility.persist(em, p));
 
         em.close();
         emf.close();

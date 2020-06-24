@@ -3,6 +3,7 @@ package de.thm.mni.vs.gruppe5.hq;
 import com.google.gson.Gson;
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.*;
+import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
 
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
@@ -10,6 +11,7 @@ import javax.jms.ObjectMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import java.io.Serializable;
 import java.util.List;
 
 public class Headquarter {
@@ -42,27 +44,15 @@ public class Headquarter {
     }
 
     private void processIncomingOrder(FridgeOrder order) throws JMSException {
-        System.out.println("Send order to factories: " + order.toString());
-        persist(order);
+        System.out.println("Send order to factories: " + order);
+        DatabaseUtility.persist(em, order);
         orderPublisher.publish(order);
     }
 
     private void processIncomingTicket(SupportTicket ticket) throws JMSException {
-        System.out.println("Send ticket to support centers: " + ticket.toString());
-        persist(ticket);
+        System.out.println("Send ticket to support centers: " + ticket);
+        DatabaseUtility.persist(em, ticket);
         ticketPublisher.publish(ticket);
-    }
-
-    private void persist(FridgeOrder order) {
-        em.getTransaction().begin();
-        em.persist(order);
-        em.getTransaction().commit();
-    }
-
-    private void persist(SupportTicket ticket) {
-        em.getTransaction().begin();
-        em.persist(ticket);
-        em.getTransaction().commit();
     }
 
     private final MessageListener incomingOrderListener = m -> {
