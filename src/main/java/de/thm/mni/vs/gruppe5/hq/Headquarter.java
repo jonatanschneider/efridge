@@ -12,18 +12,20 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import java.util.List;
 
-public class Headquarter implements AutoCloseable {
+public class Headquarter {
     private Publisher orderPublisher;
+    private Subscriber incomingOrdersSubscriber;
+    private Subscriber finishedOrdersSubscriber;
     private Publisher ticketPublisher;
     private List<Product> products;
-    EntityManagerFactory emf = Persistence.createEntityManagerFactory("eFridge-hq");
-    EntityManager em = emf.createEntityManager();
+    private final EntityManagerFactory emf = Persistence.createEntityManagerFactory("eFridge-hq");
+    private final EntityManager em = emf.createEntityManager();
 
     public static void main(String[] args) {
        try {
            var hq = new Headquarter();
            hq.setup();
-           // TODO closing of resources
+           Runtime.getRuntime().addShutdownHook(hq.closeResources());
        } catch (Exception e) {
            e.printStackTrace();
        }
@@ -132,9 +134,16 @@ public class Headquarter implements AutoCloseable {
         }
     };
 
-    @Override
-    public void close() throws Exception {
-        em.close();
-        emf.close();
+    private Thread closeResources() {
+        return new Thread(() -> {
+            System.out.println("Shutdown headquarter");
+            System.out.println("Closing database connections");
+            em.close();
+            emf.close();
+            System.out.println("Closing ActiveMQ connections");
+            orderPublisher.close();
+            finishedOrdersSubscriber.close();
+            incomingOrdersSubscriber.close();
+        });
     }
 }

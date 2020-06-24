@@ -4,7 +4,6 @@ import de.thm.mni.vs.gruppe5.common.model.Part;
 import de.thm.mni.vs.gruppe5.common.model.Product;
 import de.thm.mni.vs.gruppe5.common.model.ProductPart;
 import de.thm.mni.vs.gruppe5.common.model.Supplier;
-import org.eclipse.persistence.jpa.PersistenceProvider;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
