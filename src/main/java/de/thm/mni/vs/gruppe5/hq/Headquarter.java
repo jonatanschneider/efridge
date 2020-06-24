@@ -11,7 +11,7 @@ import javax.jms.ObjectMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 public class Headquarter {
@@ -38,7 +38,7 @@ public class Headquarter {
         var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
         var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
         var incomingTickets = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
-        var finishedTickets = new Subscriber(Config.FINISHED_TICKET_QUEUE, messageListener);
+        var finishedTickets = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
         ticketPublisher = new Publisher(Config.TICKET_QUEUE);
     }
@@ -83,7 +83,7 @@ public class Headquarter {
             var frontendTicket = new Gson().fromJson((String) objectMessage.getObject(), FrontendTicket.class);
 
             if (!frontendTicket.isValid()){
-                System.out.println("Discarding invalid order " + frontendTicket);
+                System.out.println("Discarding invalid ticket " + frontendTicket);
                 return;
             }
 
@@ -131,10 +131,18 @@ public class Headquarter {
         }
     };
 
-    private final MessageListener messageListener = m -> {
+    private final MessageListener finishedTicketListener = m -> {
         if (m instanceof ObjectMessage) {
-            var objectMessage = (ObjectMessage) m;
-            System.out.println(objectMessage.toString());
+            try {
+                var object = ((ObjectMessage) m).getObject();
+                if (object instanceof SupportTicket) {
+                    System.out.println("Received finished ticket" + object);
+                    ((SupportTicket) object).setClosingTime(new Date(System.currentTimeMillis()));
+                    DatabaseUtility.merge(em, object);
+                }
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
         }
     };
 
