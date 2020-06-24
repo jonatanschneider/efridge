@@ -18,6 +18,7 @@ public class Headquarter {
     private Publisher orderPublisher;
     private Subscriber incomingOrdersSubscriber;
     private Subscriber finishedOrdersSubscriber;
+    private Subscriber reportSubscriber;
     private Publisher ticketPublisher;
     private List<Product> products;
     private final EntityManagerFactory emf = Persistence.createEntityManagerFactory("eFridge-hq");
@@ -39,6 +40,7 @@ public class Headquarter {
         var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
         var incomingTickets = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
         var finishedTickets = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
+        var reports = new Subscriber(Config.REPORT_QUEUE, incomingReportListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
         ticketPublisher = new Publisher(Config.TICKET_QUEUE);
     }
@@ -153,6 +155,21 @@ public class Headquarter {
         }
     };
 
+    private final MessageListener incomingReportListener = m -> {
+        if (m instanceof ObjectMessage) {
+            try {
+                var object = ((ObjectMessage) m).getObject();
+                if (object instanceof Performance) {
+                    var performance = (Performance) object;
+                    System.out.println("Received performance: " + performance);
+                    DatabaseUtility.persist(em, performance);
+                }
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
     private Thread closeResources() {
         return new Thread(() -> {
             System.out.println("Shutdown headquarter");
@@ -160,9 +177,18 @@ public class Headquarter {
             em.close();
             emf.close();
             System.out.println("Closing ActiveMQ connections");
-            orderPublisher.close();
-            finishedOrdersSubscriber.close();
-            incomingOrdersSubscriber.close();
+            if (orderPublisher != null) {
+                orderPublisher.close();
+            }
+            if (finishedOrdersSubscriber != null) {
+                finishedOrdersSubscriber.close();
+            }
+            if (incomingOrdersSubscriber != null) {
+                incomingOrdersSubscriber.close();
+            }
+            if (reportSubscriber != null) {
+                reportSubscriber.close();
+            }
         });
     }
 }

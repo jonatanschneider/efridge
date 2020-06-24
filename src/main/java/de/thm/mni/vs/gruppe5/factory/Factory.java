@@ -102,7 +102,7 @@ public class Factory {
 
             System.out.println("Received order: " + order.toString());
             if (currentOrders.size() < maxCapacity) {
-                PerformanceTracker.getInstance().receivedOrder(order);
+                PerformanceTracker.getInstance().receivedOrder();
 
                 if (currentOrders.size() == maxCapacity - 1) {
                     orderSubscriber.pause();
@@ -123,8 +123,15 @@ public class Factory {
         return new Thread(() -> {
             System.out.println("Shutdown headquarter");
             System.out.println("Closing ActiveMQ connections");
-            finishedOrderPublisher.close();
-            orderSubscriber.close();
+            if (finishedOrderPublisher != null) {
+                finishedOrderPublisher.close();
+            }
+            if (reportPublisher != null) {
+                reportPublisher.close();
+            }
+            if (orderSubscriber != null) {
+                orderSubscriber.close();
+            }
         });
     }
 }

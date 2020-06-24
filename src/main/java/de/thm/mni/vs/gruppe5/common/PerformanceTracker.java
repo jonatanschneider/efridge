@@ -2,13 +2,12 @@ package de.thm.mni.vs.gruppe5.common;
 
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
 import de.thm.mni.vs.gruppe5.common.model.OrderItem;
+import de.thm.mni.vs.gruppe5.common.model.Performance;
 
 import java.io.Serializable;
 
 public class PerformanceTracker implements Serializable {
-    private int orderCount;
-    private int producedProductsCount;
-    private float producedProductsCost;
+    private Performance performance;
 
     private static PerformanceTracker instance;
 
@@ -24,13 +23,11 @@ public class PerformanceTracker implements Serializable {
     }
 
     public void reset() {
-        orderCount = 0;
-        producedProductsCount = 0;
-        producedProductsCost = 0;
+        performance = new Performance();
     }
 
-    public void receivedOrder(FridgeOrder order) {
-        orderCount++;
+    public void receivedOrder() {
+        performance.incrementOrderCount();
     }
 
     public void finishedOrderItem(OrderItem item, long productionTime) {
@@ -42,28 +39,18 @@ public class PerformanceTracker implements Serializable {
         var productCost = singleProductCost * item.getQuantity();
         var orderItemCost = productCost + productionCost;
 
-        producedProductsCount += item.getQuantity();
-        producedProductsCost += orderItemCost;
+        performance.increaseProducedProductsCount(item.getQuantity());
+        performance.increaseProducedProductsCost(orderItemCost);
     }
 
-    public int getOrderCount() {
-        return orderCount;
-    }
-
-    public int getProducedProductsCount() {
-        return producedProductsCount;
-    }
-
-    public float getProducedProductsCost() {
-        return producedProductsCost;
+    public Performance getPerformance() {
+        return this.performance;
     }
 
     @Override
     public String toString() {
         return "PerformanceTracker{" +
-                "orderCount=" + orderCount +
-                ", producedProducts=" + producedProductsCount +
-                ", producedProductsCost=" + producedProductsCost +
+                "performance=" + performance +
                 '}';
     }
 }
