@@ -76,7 +76,6 @@ public class Factory {
         // Database actions
         this.emf = DatabaseUtility.getEntityManager(this.location);
         this.em = emf.createEntityManager();
-        Config.initializeProducts(location);
 
         // Initialize publisher and subscriber
         this.orderSubscriber = new Subscriber(Config.ORDER_QUEUE, processOrder);

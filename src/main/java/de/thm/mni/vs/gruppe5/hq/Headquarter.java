@@ -11,11 +11,13 @@ import javax.jms.ObjectMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import javax.persistence.Query;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
 public class Headquarter {
-    private final Location location = Location.HEADQUARTER;
+    private final static Location location = Location.HEADQUARTER;
     private Publisher orderPublisher;
     private Subscriber incomingOrdersSubscriber;
     private Subscriber finishedOrdersSubscriber;
@@ -35,7 +37,12 @@ public class Headquarter {
     }
 
     private void setup() throws JMSException {
-        this.products = Config.initializeProducts(location);
+        this.emf = DatabaseUtility.getEntityManager(location);
+        this.em = emf.createEntityManager();
+
+        Query query = em.createQuery("SELECT p FROM Product p");
+        this.products = query.getResultList();
+        this.products.sort(Comparator.comparing(Product::getId));
 
         var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
         var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
@@ -43,19 +50,18 @@ public class Headquarter {
         var finishedTickets = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
         ticketPublisher = new Publisher(Config.TICKET_QUEUE);
-        this.emf = DatabaseUtility.getEntityManager(location);
-        this.em = emf.createEntityManager();
+
     }
 
     private void processIncomingOrder(FridgeOrder order) throws JMSException {
         System.out.println("Send order to factories: " + order);
-        DatabaseUtility.persist(em, order);
+        DatabaseUtility.persist(emf, order);
         orderPublisher.publish(order);
     }
 
     private void processIncomingTicket(SupportTicket ticket) throws JMSException {
         System.out.println("Send ticket to support centers: " + ticket);
-        DatabaseUtility.persist(em, ticket);
+        DatabaseUtility.persist(emf, ticket);
         ticketPublisher.publish(ticket);
     }
 
@@ -127,11 +133,7 @@ public class Headquarter {
                 var object = ((ObjectMessage) m).getObject();
                 if (object instanceof FridgeOrder) {
                     System.out.println("Received finished order" + object);
-                    em.getTransaction().begin();
-                    em.merge(object);
-                    //var item = em.find(FridgeOrder.class, ((FridgeOrder) object).getId());
-                    //item.setStatus(OrderStatus.COMPLETED);
-                    em.getTransaction().commit();
+                    DatabaseUtility.merge(emf, object);
                 }
             } catch (JMSException e) {
                 e.printStackTrace();
@@ -152,7 +154,7 @@ public class Headquarter {
                     } else {
                         System.out.println("Received finished ticket" + object);
                         ((SupportTicket) object).setClosingTime(new Date(System.currentTimeMillis()));
-                        DatabaseUtility.merge(em, object);
+                        DatabaseUtility.merge(emf, object);
                     }
                 }
             } catch (JMSException e) {
