@@ -51,6 +51,7 @@ public class Headquarter {
         this.finishedOrdersSubscriber = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
         this.incomingTicketsSubscriber = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
         this.finishedTicketsSubscriber = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
+        this.reportSubscriber = new Subscriber(Config.REPORT_QUEUE, incomingReportListener);
         this.orderPublisher = new Publisher(Config.ORDER_QUEUE);
         this.ticketPublisher = new Publisher(Config.TICKET_QUEUE);
     }
