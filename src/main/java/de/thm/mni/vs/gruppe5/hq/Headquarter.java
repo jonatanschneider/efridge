@@ -11,50 +11,60 @@ import javax.jms.ObjectMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import javax.persistence.Query;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
 public class Headquarter {
-    private Publisher orderPublisher;
-    private Subscriber incomingOrdersSubscriber;
-    private Subscriber finishedOrdersSubscriber;
+    private final static Location location = Location.HEADQUARTER;
+    private final List<Product> products;
+    private final Subscriber incomingOrdersSubscriber;
+    private final Subscriber finishedOrdersSubscriber;
+    private final Subscriber incomingTicketsSubscriber;
+    private final Subscriber finishedTicketsSubscriber;
     private Subscriber reportSubscriber;
+    private Publisher orderPublisher;
     private Publisher ticketPublisher;
-    private List<Product> products;
-    private final EntityManagerFactory emf = Persistence.createEntityManagerFactory("eFridge-hq");
-    private final EntityManager em = emf.createEntityManager();
+    private EntityManagerFactory emf;
+
 
     public static void main(String[] args) {
        try {
            var hq = new Headquarter();
-           hq.setup();
            Runtime.getRuntime().addShutdownHook(hq.closeResources());
        } catch (Exception e) {
            e.printStackTrace();
        }
     }
 
-    private void setup() throws JMSException {
-        this.products = Config.initializeProducts(Location.HEADQUARTER);
-        var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
-        var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
-        var incomingTickets = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
-        var finishedTickets = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
-        var reports = new Subscriber(Config.REPORT_QUEUE, incomingReportListener);
-        orderPublisher = new Publisher(Config.ORDER_QUEUE);
-        ticketPublisher = new Publisher(Config.TICKET_QUEUE);
+    private Headquarter() throws JMSException {
+        this.emf = DatabaseUtility.getEntityManager(location);
+
+        var em = emf.createEntityManager();
+        Query query = em.createQuery("SELECT p FROM Product p");
+        this.products = query.getResultList();
+        this.products.sort(Comparator.comparing(Product::getId));
+        em.close();
+
+        this.incomingOrdersSubscriber = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
+        this.finishedOrdersSubscriber = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
+        this.incomingTicketsSubscriber = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
+        this.finishedTicketsSubscriber = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
+        this.orderPublisher = new Publisher(Config.ORDER_QUEUE);
+        this.ticketPublisher = new Publisher(Config.TICKET_QUEUE);
     }
 
     private void processIncomingOrder(FridgeOrder order) throws JMSException {
         System.out.println("Send order to factories: " + order);
-        DatabaseUtility.persist(em, order);
-        orderPublisher.publish(order);
+        DatabaseUtility.persist(emf, order);
+        this.orderPublisher.publish(order);
     }
 
     private void processIncomingTicket(SupportTicket ticket) throws JMSException {
         System.out.println("Send ticket to support centers: " + ticket);
-        DatabaseUtility.persist(em, ticket);
-        ticketPublisher.publish(ticket);
+        DatabaseUtility.persist(emf, ticket);
+        this.ticketPublisher.publish(ticket);
     }
 
     private final MessageListener incomingOrderListener = m -> {
@@ -125,7 +135,7 @@ public class Headquarter {
                 var object = ((ObjectMessage) m).getObject();
                 if (object instanceof FridgeOrder) {
                     System.out.println("Received finished order" + object);
-                    DatabaseUtility.merge(em, object);
+                    DatabaseUtility.merge(emf, object);
                 }
             } catch (JMSException e) {
                 e.printStackTrace();
@@ -146,7 +156,7 @@ public class Headquarter {
                     } else {
                         System.out.println("Received finished ticket" + object);
                         ((SupportTicket) object).setClosingTime(new Date(System.currentTimeMillis()));
-                        DatabaseUtility.merge(em, object);
+                        DatabaseUtility.merge(emf, object);
                     }
                 }
             } catch (JMSException e) {
@@ -162,7 +172,7 @@ public class Headquarter {
                 if (object instanceof Performance) {
                     var performance = (Performance) object;
                     System.out.println("Received performance: " + performance);
-                    DatabaseUtility.persist(em, performance);
+                    DatabaseUtility.persist(emf, performance);
                 }
             } catch (JMSException e) {
                 e.printStackTrace();
@@ -173,19 +183,30 @@ public class Headquarter {
     private Thread closeResources() {
         return new Thread(() -> {
             System.out.println("Shutdown headquarter");
-            System.out.println("Closing database connections");
-            em.close();
+            System.out.println("Closing database connection");
             emf.close();
             System.out.println("Closing ActiveMQ connections");
+
             if (orderPublisher != null) {
                 orderPublisher.close();
-            }
-            if (finishedOrdersSubscriber != null) {
-                finishedOrdersSubscriber.close();
             }
             if (incomingOrdersSubscriber != null) {
                 incomingOrdersSubscriber.close();
             }
+            if (finishedOrdersSubscriber != null) {
+                finishedOrdersSubscriber.close();
+            }
+
+            if (ticketPublisher != null) {
+                ticketPublisher.close();
+            }
+            if (incomingTicketsSubscriber != null) {
+                incomingTicketsSubscriber.close();
+            }
+            if (finishedTicketsSubscriber != null) {
+                finishedTicketsSubscriber.close();
+            }
+
             if (reportSubscriber != null) {
                 reportSubscriber.close();
             }

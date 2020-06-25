@@ -2,25 +2,33 @@ package de.thm.mni.vs.gruppe5.factory;
 
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
+import de.thm.mni.vs.gruppe5.common.model.OrderStatus;
 import de.thm.mni.vs.gruppe5.factory.report.ReportTask;
+import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
+import org.hibernate.criterion.Order;
 
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
+import java.util.concurrent.CompletableFuture;
 
 public class Factory {
-    private Location location;
+    private final Location location;
+    private final Publisher finishedOrderPublisher;
+    private final Publisher reportPublisher;
+    private Subscriber orderSubscriber;
     private IProduction production;
-    private Publisher finishedOrderPublisher;
-    private Publisher reportPublisher;
     private float productionTimeFactor;
     private int maxCapacity;
     private List<FridgeOrder> currentOrders;
-    private Subscriber orderSubscriber;
+    private EntityManagerFactory emf;
+
 
     public static void main(String[] args) {
         Location location;
@@ -53,46 +61,35 @@ public class Factory {
             return;
         }
 
-        var factory = new Factory(location, productionTimeFactor, maxCapacity);
-
         try {
-            factory.setup();
+            var factory = new Factory(location, productionTimeFactor, maxCapacity);
             Runtime.getRuntime().addShutdownHook(factory.closeResources());
         } catch (JMSException e) {
             e.printStackTrace();
         }
     }
 
-    public Factory(Location location, float productionTimeFactor, int maxCapacity) {
+    public Factory(Location location, float productionTimeFactor, int maxCapacity) throws JMSException {
         this.location = location;
         this.productionTimeFactor = productionTimeFactor;
         this.maxCapacity = maxCapacity;
         this.currentOrders = Collections.synchronizedList(new ArrayList<>(maxCapacity));
+        this.emf = DatabaseUtility.getEntityManager(this.location);
+
+        // Initialize publisher and subscriber
+        this.orderSubscriber = new Subscriber(Config.ORDER_QUEUE, processOrder);
+        this.finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
+        this.production = new Production();
+        this.reportPublisher = new Publisher(Config.REPORT_QUEUE);
+
+        // Initialize and start report task
+        var reportTask = new ReportTask(reportPublisher);
+        new Timer().scheduleAtFixedRate(reportTask, 0, reportTask.getPeriod());
+
         System.out.println("Factory - " + location.name()
                 + " - productionTimeFactor: " + productionTimeFactor
                 + " - maxCapacity: " + maxCapacity);
-    }
 
-    private void setup() throws JMSException {
-        Config.initializeProducts(location);
-        orderSubscriber = new Subscriber(Config.ORDER_QUEUE, processOrder);
-        finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
-        production = new Production();
-        reportPublisher = new Publisher(Config.REPORT_QUEUE);
-
-        var reportTask = new ReportTask(reportPublisher);
-        new Timer().scheduleAtFixedRate(reportTask, 0, reportTask.getPeriod());
-    }
-
-    private void reportFinishedOrder(FridgeOrder order) {
-        System.out.println("Finished order " + order.toString());
-        try {
-            finishedOrderPublisher.publish(order);
-            currentOrders.remove(order);
-            orderSubscriber.restart();
-        } catch (JMSException e) {
-            e.printStackTrace();
-        }
     }
 
     private final MessageListener processOrder = m -> {
@@ -107,8 +104,14 @@ public class Factory {
                 if (currentOrders.size() == maxCapacity - 1) {
                     orderSubscriber.pause();
                 }
-                currentOrders.add(order);
-                production.orderParts(order).thenCompose(o -> production.produce(o, this.productionTimeFactor)).thenAccept(this::reportFinishedOrder);
+                DatabaseUtility.merge(emf, order);
+                production.orderParts(order)
+                        .thenCompose(o -> CompletableFuture.supplyAsync(() -> {
+                                DatabaseUtility.merge(emf, o);
+                                return o;
+                            }))
+                        .thenCompose(o -> production.produce(o, this.productionTimeFactor))
+                        .thenAccept(this::reportFinishedOrder);
             } else {
                 // This should never happen
                 // If it does happen, current implementation of max capacity is faulty
@@ -118,6 +121,18 @@ public class Factory {
             e.printStackTrace();
         }
     };
+
+    private void reportFinishedOrder(FridgeOrder order) {
+        System.out.println("Finished order " + order.toString());
+        try {
+            DatabaseUtility.merge(emf, order);
+            finishedOrderPublisher.publish(order);
+            currentOrders.remove(order);
+            orderSubscriber.restart();
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
+    }
 
     private Thread closeResources() {
         return new Thread(() -> {
@@ -131,6 +146,9 @@ public class Factory {
             }
             if (orderSubscriber != null) {
                 orderSubscriber.close();
+            }
+            if (emf != null) {
+                emf.close();
             }
         });
     }

@@ -1,12 +1,14 @@
 package de.thm.mni.vs.gruppe5.common.model;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import javax.persistence.*;
 import java.io.Serializable;
 
 @Entity
 public class OrderItem implements Serializable {
-    @Id
-    @GeneratedValue
+    @Id @GeneratedValue(generator="system-uuid")
+    @GenericGenerator(name="system-uuid", strategy = "uuid")
     private String id;
 
     @OneToOne
