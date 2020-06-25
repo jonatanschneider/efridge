@@ -1,5 +1,7 @@
 package de.thm.mni.vs.gruppe5.common.model;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.HashSet;
@@ -7,8 +9,8 @@ import java.util.Set;
 
 @Entity
 public class FridgeOrder implements Serializable {
-    @Id
-    @GeneratedValue
+    @Id @GeneratedValue(generator="system-uuid")
+    @GenericGenerator(name="system-uuid", strategy = "uuid")
     private String id;
 
     private String customerId;
