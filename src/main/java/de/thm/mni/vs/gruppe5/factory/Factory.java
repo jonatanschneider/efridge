@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
+import java.util.concurrent.CompletableFuture;
 
 public class Factory {
     private final Location location;
@@ -104,7 +105,13 @@ public class Factory {
                     orderSubscriber.pause();
                 }
                 DatabaseUtility.merge(emf, order);
-                production.orderParts(order).thenCompose(o -> production.produce(o, this.productionTimeFactor)).thenAccept(this::reportFinishedOrder);
+                production.orderParts(order)
+                        .thenCompose(o -> CompletableFuture.supplyAsync(() -> {
+                                DatabaseUtility.merge(emf, o);
+                                return o;
+                            }))
+                        .thenCompose(o -> production.produce(o, this.productionTimeFactor))
+                        .thenAccept(this::reportFinishedOrder);
             } else {
                 // This should never happen
                 // If it does happen, current implementation of max capacity is faulty
