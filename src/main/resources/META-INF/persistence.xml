@@ -3,7 +3,7 @@
 
     <!--HEADUARTER-->
     <persistence-unit name="eFridge-hq">
-        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <provider>org.hibernate.ejb.HibernatePersistence</provider>
         <class>de.thm.mni.vs.gruppe5.common.model.FridgeOrder</class>
         <class>de.thm.mni.vs.gruppe5.common.model.Part</class>
         <class>de.thm.mni.vs.gruppe5.common.model.Product</class>
@@ -15,13 +15,13 @@
             <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
             <property name="javax.persistence.jdbc.user" value="user"/>
             <property name="javax.persistence.jdbc.password" value="password"/>
-            <property name="eclipselink.ddl-generation" value="create-tables"/>
+            <property name="javax.persistence.schema-generation.database.action" value="create"/>
         </properties>
     </persistence-unit>
 
     <!--USA Factory-->
     <persistence-unit name="eFridge-us">
-        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <provider>org.hibernate.ejb.HibernatePersistence</provider>
         <class>de.thm.mni.vs.gruppe5.common.model.FridgeOrder</class>
         <class>de.thm.mni.vs.gruppe5.common.model.Part</class>
         <class>de.thm.mni.vs.gruppe5.common.model.Product</class>
@@ -32,13 +32,13 @@
             <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
             <property name="javax.persistence.jdbc.user" value="user"/>
             <property name="javax.persistence.jdbc.password" value="password"/>
-            <property name="eclipselink.ddl-generation" value="create-tables"/>
+            <property name="javax.persistence.schema-generation.database.action" value="create"/>
         </properties>
     </persistence-unit>
 
     <!--CHINA Factory-->
     <persistence-unit name="eFridge-cn">
-        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <provider>org.hibernate.ejb.HibernatePersistence</provider>
         <class>de.thm.mni.vs.gruppe5.common.model.FridgeOrder</class>
         <class>de.thm.mni.vs.gruppe5.common.model.Part</class>
         <class>de.thm.mni.vs.gruppe5.common.model.Product</class>
@@ -49,33 +49,33 @@
             <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
             <property name="javax.persistence.jdbc.user" value="user"/>
             <property name="javax.persistence.jdbc.password" value="password"/>
-            <property name="eclipselink.ddl-generation" value="create-tables"/>
+            <property name="javax.persistence.schema-generation.database.action" value="create"/>
         </properties>
     </persistence-unit>
 
     <!--MEXICO Support Center-->
     <persistence-unit name="eFridge-mx">
-        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <provider>org.hibernate.ejb.HibernatePersistence</provider>
         <class>de.thm.mni.vs.gruppe5.common.model.SupportTicket</class>
         <properties>
             <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5435/db"/>
             <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
             <property name="javax.persistence.jdbc.user" value="user"/>
             <property name="javax.persistence.jdbc.password" value="password"/>
-            <property name="eclipselink.ddl-generation" value="create-tables"/>
+            <property name="javax.persistence.schema-generation.database.action" value="create"/>
         </properties>
     </persistence-unit>
 
     <!--INDIA Support Center-->
     <persistence-unit name="eFridge-in">
-        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <provider>org.hibernate.ejb.HibernatePersistence</provider>
         <class>de.thm.mni.vs.gruppe5.common.model.SupportTicket</class>
         <properties>
             <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5436/db"/>
             <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
             <property name="javax.persistence.jdbc.user" value="user"/>
             <property name="javax.persistence.jdbc.password" value="password"/>
-            <property name="eclipselink.ddl-generation" value="create-tables"/>
+            <property name="javax.persistence.schema-generation.database.action" value="create"/>
         </properties>
     </persistence-unit>
 </persistence>
