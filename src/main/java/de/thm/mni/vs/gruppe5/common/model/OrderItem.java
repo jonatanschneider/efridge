@@ -2,9 +2,11 @@ package de.thm.mni.vs.gruppe5.common.model;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Date;
+import java.util.Random;
 
 @Entity
-public class OrderItem extends Completable implements Serializable {
+public class OrderItem implements Serializable, Completable {
     @Id
     @GeneratedValue
     private String id;
@@ -13,6 +15,8 @@ public class OrderItem extends Completable implements Serializable {
     private Product product;
 
     private int quantity;
+
+    private Date completedAt;
 
 
     public OrderItem() {
@@ -50,5 +54,26 @@ public class OrderItem extends Completable implements Serializable {
                 ", product=" + product +
                 ", quantity=" + quantity +
                 '}';
+    }
+
+    @Override
+    public void init(int seconds) {
+        completedAt = new Date(System.currentTimeMillis() + seconds * 1000);
+    }
+
+    @Override
+    public void initRandom(int seconds) {
+        init(new Random().nextInt(seconds) + 1);
+    }
+
+    @Override
+    public boolean hasInit() {
+        return completedAt != null;
+    }
+
+    @Override
+    public void complete() throws InterruptedException {
+        while (completedAt.after(new Date(System.currentTimeMillis())))
+            Thread.sleep(1000);
     }
 }
