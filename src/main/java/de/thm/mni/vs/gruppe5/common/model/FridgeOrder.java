@@ -2,12 +2,14 @@ package de.thm.mni.vs.gruppe5.common.model;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
 @Entity
-public class FridgeOrder implements Serializable {
+public class FridgeOrder implements Serializable, Completable {
     @Id
     private String id = UUID.randomUUID().toString();
 
@@ -19,6 +21,8 @@ public class FridgeOrder implements Serializable {
     private OrderStatus status;
 
     private boolean partsOrdered;
+
+    private Date completedAt;
 
     public FridgeOrder() {
         this.orderItems = new HashSet<>();
@@ -76,5 +80,41 @@ public class FridgeOrder implements Serializable {
                 ", status=" + status +
                 ", partsOrdered=" + partsOrdered +
                 '}';
+    }
+
+    @Override
+    public void init(int seconds) {
+        completedAt = new Date(System.currentTimeMillis() + seconds * 1000);
+    }
+
+    @Override
+    public void initRandom(int seconds) {
+        var r = new Random();
+        var waitTime = orderItems.stream()
+                .flatMap(orderItem -> orderItem.getProduct().getProductParts().stream())
+                .map(productPart -> productPart.getPart().getSupplier())
+                .distinct()
+                .mapToInt(x -> r.nextInt(seconds))
+                .sum();
+        init(waitTime);
+        System.out.println("Set wait time for FridgeOrder " + id + ": " + waitTime + " seconds");
+    }
+
+    @Override
+    public boolean hasInit() {
+        return completedAt != null;
+    }
+
+    @Override
+    public void complete() throws InterruptedException {
+        var suppliers = orderItems.stream()
+                .flatMap(orderItem -> orderItem.getProduct().getProductParts().stream())
+                .map(productPart -> productPart.getPart().getSupplier())
+                .distinct()
+                .map(Enum::toString)
+                .toArray(String[]::new);
+        System.out.println("Ordering from " + String.join(", ", suppliers));
+        while (completedAt.after(new Date(System.currentTimeMillis())))
+            Thread.sleep(1000);
     }
 }
