@@ -2,8 +2,10 @@ package de.thm.mni.vs.gruppe5.factory;
 
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
+import de.thm.mni.vs.gruppe5.common.model.OrderStatus;
 import de.thm.mni.vs.gruppe5.factory.report.ReportTask;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
+import org.hibernate.criterion.Order;
 
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
@@ -16,8 +18,6 @@ import java.util.List;
 import java.util.Timer;
 
 public class Factory {
-    private final EntityManagerFactory emf;
-    private final EntityManager em;
     private final Location location;
     private final Publisher finishedOrderPublisher;
     private final Publisher reportPublisher;
@@ -26,6 +26,7 @@ public class Factory {
     private float productionTimeFactor;
     private int maxCapacity;
     private List<FridgeOrder> currentOrders;
+    private EntityManagerFactory emf;
 
 
     public static void main(String[] args) {
@@ -72,10 +73,7 @@ public class Factory {
         this.productionTimeFactor = productionTimeFactor;
         this.maxCapacity = maxCapacity;
         this.currentOrders = Collections.synchronizedList(new ArrayList<>(maxCapacity));
-
-        // Database actions
         this.emf = DatabaseUtility.getEntityManager(this.location);
-        this.em = emf.createEntityManager();
 
         // Initialize publisher and subscriber
         this.orderSubscriber = new Subscriber(Config.ORDER_QUEUE, processOrder);
@@ -93,17 +91,6 @@ public class Factory {
 
     }
 
-    private void reportFinishedOrder(FridgeOrder order) {
-        System.out.println("Finished order " + order.toString());
-        try {
-            finishedOrderPublisher.publish(order);
-            currentOrders.remove(order);
-            orderSubscriber.restart();
-        } catch (JMSException e) {
-            e.printStackTrace();
-        }
-    }
-
     private final MessageListener processOrder = m -> {
         try {
             var objectMessage = (ObjectMessage) m;
@@ -116,7 +103,7 @@ public class Factory {
                 if (currentOrders.size() == maxCapacity - 1) {
                     orderSubscriber.pause();
                 }
-                currentOrders.add(order);
+                DatabaseUtility.merge(emf, order);
                 production.orderParts(order).thenCompose(o -> production.produce(o, this.productionTimeFactor)).thenAccept(this::reportFinishedOrder);
             } else {
                 // This should never happen
@@ -128,14 +115,30 @@ public class Factory {
         }
     };
 
+    private void reportFinishedOrder(FridgeOrder order) {
+        System.out.println("Finished order " + order.toString());
+        try {
+            DatabaseUtility.merge(emf, order);
+            finishedOrderPublisher.publish(order);
+            currentOrders.remove(order);
+            orderSubscriber.restart();
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
+    }
+
     private Thread closeResources() {
         return new Thread(() -> {
             System.out.println("Shutdown headquarter");
             System.out.println("Closing ActiveMQ connections");
-            finishedOrderPublisher.close();
-            orderSubscriber.close();
-            if (em != null) {
-                em.close();
+            if (finishedOrderPublisher != null) {
+                finishedOrderPublisher.close();
+            }
+            if (reportPublisher != null) {
+                reportPublisher.close();
+            }
+            if (orderSubscriber != null) {
+                orderSubscriber.close();
             }
             if (emf != null) {
                 emf.close();
