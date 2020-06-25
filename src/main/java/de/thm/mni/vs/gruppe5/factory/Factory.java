@@ -16,16 +16,17 @@ import java.util.List;
 import java.util.Timer;
 
 public class Factory {
+    private final EntityManagerFactory emf;
+    private final EntityManager em;
     private final Location location;
+    private final Publisher finishedOrderPublisher;
+    private final Publisher reportPublisher;
+    private Subscriber orderSubscriber;
     private IProduction production;
-    private Publisher finishedOrderPublisher;
-    private Publisher reportPublisher;
     private float productionTimeFactor;
     private int maxCapacity;
     private List<FridgeOrder> currentOrders;
-    private Subscriber orderSubscriber;
-    private EntityManagerFactory emf;
-    private EntityManager em;
+
 
     public static void main(String[] args) {
         Location location;
@@ -58,37 +59,39 @@ public class Factory {
             return;
         }
 
-        var factory = new Factory(location, productionTimeFactor, maxCapacity);
-
         try {
-            factory.setup();
+            var factory = new Factory(location, productionTimeFactor, maxCapacity);
             Runtime.getRuntime().addShutdownHook(factory.closeResources());
         } catch (JMSException e) {
             e.printStackTrace();
         }
     }
 
-    public Factory(Location location, float productionTimeFactor, int maxCapacity) {
+    public Factory(Location location, float productionTimeFactor, int maxCapacity) throws JMSException {
         this.location = location;
         this.productionTimeFactor = productionTimeFactor;
         this.maxCapacity = maxCapacity;
         this.currentOrders = Collections.synchronizedList(new ArrayList<>(maxCapacity));
+
+        // Database actions
+        this.emf = DatabaseUtility.getEntityManager(this.location);
+        this.em = emf.createEntityManager();
+        Config.initializeProducts(location);
+
+        // Initialize publisher and subscriber
+        this.orderSubscriber = new Subscriber(Config.ORDER_QUEUE, processOrder);
+        this.finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
+        this.production = new Production();
+        this.reportPublisher = new Publisher(Config.REPORT_QUEUE);
+
+        // Initialize and start report task
+        var reportTask = new ReportTask(reportPublisher);
+        new Timer().scheduleAtFixedRate(reportTask, 0, reportTask.getPeriod());
+
         System.out.println("Factory - " + location.name()
                 + " - productionTimeFactor: " + productionTimeFactor
                 + " - maxCapacity: " + maxCapacity);
-        this.emf = DatabaseUtility.getEntityManager(location);
-        this.em = emf.createEntityManager();
-    }
 
-    private void setup() throws JMSException {
-        Config.initializeProducts(location);
-        orderSubscriber = new Subscriber(Config.ORDER_QUEUE, processOrder);
-        finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
-        production = new Production();
-        reportPublisher = new Publisher(Config.REPORT_QUEUE);
-
-        var reportTask = new ReportTask(reportPublisher);
-        new Timer().scheduleAtFixedRate(reportTask, 0, reportTask.getPeriod());
     }
 
     private void reportFinishedOrder(FridgeOrder order) {
@@ -132,6 +135,12 @@ public class Factory {
             System.out.println("Closing ActiveMQ connections");
             finishedOrderPublisher.close();
             orderSubscriber.close();
+            if (em != null) {
+                em.close();
+            }
+            if (emf != null) {
+                emf.close();
+            }
         });
     }
 }
