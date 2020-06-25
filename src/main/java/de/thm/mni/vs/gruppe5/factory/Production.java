@@ -43,7 +43,14 @@ public class Production implements IProduction {
                 var product = orderItem.getProduct();
                 var time = (int) (product.getProductionTime() * orderItem.getQuantity() * factoryTimeFactor);
                 System.out.println("Producing '" + product.getName() + "' (" + orderItem.getQuantity() + "x): " + time + " seconds");
-                orderItem.init(time);
+                if (!orderItem.hasInit()) {
+                    orderItem.init(time);
+                }
+                try {
+                    orderItem.complete();
+                } catch (InterruptedException e) {
+                    System.out.println("Manually interrupting waiting time");
+                }
                 performanceTracker.finishedOrderItem(orderItem, time);
             });
 
