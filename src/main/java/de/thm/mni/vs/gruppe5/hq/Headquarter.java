@@ -18,51 +18,52 @@ import java.util.List;
 
 public class Headquarter {
     private final static Location location = Location.HEADQUARTER;
+    private final List<Product> products;
+    private final Subscriber incomingOrdersSubscriber;
+    private final Subscriber finishedOrdersSubscriber;
+    private final Subscriber incomingTicketsSubscriber;
+    private final Subscriber finishedTicketsSubscriber;
     private Publisher orderPublisher;
-    private Subscriber incomingOrdersSubscriber;
-    private Subscriber finishedOrdersSubscriber;
     private Publisher ticketPublisher;
-    private List<Product> products;
     private EntityManagerFactory emf;
-    private EntityManager em;
+
 
     public static void main(String[] args) {
        try {
            var hq = new Headquarter();
-           hq.setup();
            Runtime.getRuntime().addShutdownHook(hq.closeResources());
        } catch (Exception e) {
            e.printStackTrace();
        }
     }
 
-    private void setup() throws JMSException {
+    private Headquarter() throws JMSException {
         this.emf = DatabaseUtility.getEntityManager(location);
-        this.em = emf.createEntityManager();
 
+        var em = emf.createEntityManager();
         Query query = em.createQuery("SELECT p FROM Product p");
         this.products = query.getResultList();
         this.products.sort(Comparator.comparing(Product::getId));
+        em.close();
 
-        var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
-        var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
-        var incomingTickets = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
-        var finishedTickets = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
-        orderPublisher = new Publisher(Config.ORDER_QUEUE);
-        ticketPublisher = new Publisher(Config.TICKET_QUEUE);
-
+        this.incomingOrdersSubscriber = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
+        this.finishedOrdersSubscriber = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
+        this.incomingTicketsSubscriber = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
+        this.finishedTicketsSubscriber = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
+        this.orderPublisher = new Publisher(Config.ORDER_QUEUE);
+        this.ticketPublisher = new Publisher(Config.TICKET_QUEUE);
     }
 
     private void processIncomingOrder(FridgeOrder order) throws JMSException {
         System.out.println("Send order to factories: " + order);
         DatabaseUtility.persist(emf, order);
-        orderPublisher.publish(order);
+        this.orderPublisher.publish(order);
     }
 
     private void processIncomingTicket(SupportTicket ticket) throws JMSException {
         System.out.println("Send ticket to support centers: " + ticket);
         DatabaseUtility.persist(emf, ticket);
-        ticketPublisher.publish(ticket);
+        this.ticketPublisher.publish(ticket);
     }
 
     private final MessageListener incomingOrderListener = m -> {
@@ -166,13 +167,28 @@ public class Headquarter {
     private Thread closeResources() {
         return new Thread(() -> {
             System.out.println("Shutdown headquarter");
-            System.out.println("Closing database connections");
-            em.close();
+            System.out.println("Closing database connection");
             emf.close();
             System.out.println("Closing ActiveMQ connections");
-            orderPublisher.close();
-            finishedOrdersSubscriber.close();
-            incomingOrdersSubscriber.close();
+            if (orderPublisher != null) {
+                orderPublisher.close();
+            }
+            if (incomingOrdersSubscriber != null) {
+                incomingOrdersSubscriber.close();
+            }
+            if (finishedOrdersSubscriber != null) {
+                finishedOrdersSubscriber.close();
+            }
+
+            if (ticketPublisher != null) {
+                ticketPublisher.close();
+            }
+            if (incomingTicketsSubscriber != null) {
+                incomingTicketsSubscriber.close();
+            }
+            if (finishedTicketsSubscriber != null) {
+                finishedTicketsSubscriber.close();
+            }
         });
     }
 }
