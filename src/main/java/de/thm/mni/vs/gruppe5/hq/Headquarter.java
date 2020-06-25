@@ -127,7 +127,11 @@ public class Headquarter {
                 var object = ((ObjectMessage) m).getObject();
                 if (object instanceof FridgeOrder) {
                     System.out.println("Received finished order" + object);
-                    DatabaseUtility.merge(em, object);
+                    em.getTransaction().begin();
+                    em.merge(object);
+                    //var item = em.find(FridgeOrder.class, ((FridgeOrder) object).getId());
+                    //item.setStatus(OrderStatus.COMPLETED);
+                    em.getTransaction().commit();
                 }
             } catch (JMSException e) {
                 e.printStackTrace();

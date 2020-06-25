@@ -18,13 +18,8 @@ public class DatabaseUtility {
      */
     public static void persist(EntityManager em, Serializable object) throws EntityExistsException {
         em.getTransaction().begin();
-        try {
-            em.persist(object);
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-            em.getTransaction().rollback();
-        }
+        em.persist(object);
+        em.getTransaction().commit();
     }
 
     /**
@@ -35,13 +30,8 @@ public class DatabaseUtility {
      */
     public static void merge(EntityManager em, Serializable object) {
         em.getTransaction().begin();
-        try {
-            em.merge(object);
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-            em.getTransaction().rollback();
-        }
+        em.merge(object);
+        em.getTransaction().commit();
     }
 
     /**
