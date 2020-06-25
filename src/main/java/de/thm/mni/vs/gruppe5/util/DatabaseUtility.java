@@ -3,45 +3,37 @@ package de.thm.mni.vs.gruppe5.util;
 import de.thm.mni.vs.gruppe5.common.Location;
 
 import javax.persistence.EntityExistsException;
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import java.io.Serializable;
 
 public class DatabaseUtility {
-
     /**
      * Inserts an object into the database
      * @throws EntityExistsException if id is not unique in the database
-     * @param em entity manager
+     * @param emf entity manager factory
      * @param object object to be inserted
      */
-    public static void persist(EntityManager em, Serializable object) throws EntityExistsException {
+    public static void persist(EntityManagerFactory emf, Serializable object) throws EntityExistsException {
+        var em = emf.createEntityManager();
         em.getTransaction().begin();
-        try {
-            em.persist(object);
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-            em.getTransaction().rollback();
-        }
+        em.persist(object);
+        em.getTransaction().commit();
+        em.close();
     }
 
     /**
      * Inserts or updates objects, based ob whether the id is already existing
      * Note: Use with caution if you want to auto-generate the id
-     * @param em entity manager
+     * @param emf entity manager factory
      * @param object object to be inserted/updated
      */
-    public static void merge(EntityManager em, Serializable object) {
+    public static void merge(EntityManagerFactory emf, Serializable object) {
+        var em = emf.createEntityManager();
         em.getTransaction().begin();
-        try {
-            em.merge(object);
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-            em.getTransaction().rollback();
-        }
+        em.merge(object);
+        em.getTransaction().commit();
+        em.close();
     }
 
     /**
@@ -57,6 +49,5 @@ public class DatabaseUtility {
             default -> { return null; }
         }
     }
-
 
 }

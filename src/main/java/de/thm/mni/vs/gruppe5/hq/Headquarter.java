@@ -17,7 +17,7 @@ import java.util.Date;
 import java.util.List;
 
 public class Headquarter {
-    private final Location location = Location.HEADQUARTER;
+    private final static Location location = Location.HEADQUARTER;
     private Publisher orderPublisher;
     private Subscriber incomingOrdersSubscriber;
     private Subscriber finishedOrdersSubscriber;
@@ -55,13 +55,13 @@ public class Headquarter {
 
     private void processIncomingOrder(FridgeOrder order) throws JMSException {
         System.out.println("Send order to factories: " + order);
-        DatabaseUtility.persist(em, order);
+        DatabaseUtility.persist(emf, order);
         orderPublisher.publish(order);
     }
 
     private void processIncomingTicket(SupportTicket ticket) throws JMSException {
         System.out.println("Send ticket to support centers: " + ticket);
-        DatabaseUtility.persist(em, ticket);
+        DatabaseUtility.persist(emf, ticket);
         ticketPublisher.publish(ticket);
     }
 
@@ -133,7 +133,7 @@ public class Headquarter {
                 var object = ((ObjectMessage) m).getObject();
                 if (object instanceof FridgeOrder) {
                     System.out.println("Received finished order" + object);
-                    DatabaseUtility.merge(em, object);
+                    DatabaseUtility.merge(emf, object);
                 }
             } catch (JMSException e) {
                 e.printStackTrace();
@@ -154,7 +154,7 @@ public class Headquarter {
                     } else {
                         System.out.println("Received finished ticket" + object);
                         ((SupportTicket) object).setClosingTime(new Date(System.currentTimeMillis()));
-                        DatabaseUtility.merge(em, object);
+                        DatabaseUtility.merge(emf, object);
                     }
                 }
             } catch (JMSException e) {
