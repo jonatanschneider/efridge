@@ -4,7 +4,7 @@ import javax.persistence.*;
 import java.io.Serializable;
 
 @Entity
-public class OrderItem implements Serializable {
+public class OrderItem extends Completable implements Serializable {
     @Id
     @GeneratedValue
     private String id;
