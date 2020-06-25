@@ -20,14 +20,22 @@ public class Production implements IProduction {
         return CompletableFuture.supplyAsync(() -> {
 
             /* Wait for all suppliers where we need to order items for this FridgeOrder */
-            order.getOrderItems().stream()
+            /*order.getOrderItems().stream()
                     .flatMap(orderItem -> orderItem.getProduct().getProductParts().stream())
                     .map(productPart -> productPart.getPart().getSupplier())
                     .distinct()
                     .forEach(x -> {
                         System.out.println("Ordering from " + x.name());
                         TimeHelper.waitRandom(10);
-                    });
+                    });*/
+            if (!order.hasInit()) {
+                order.initRandom(10);
+            }
+            try {
+                order.complete();
+            } catch (InterruptedException e) {
+                System.out.println("Manually interrupting waiting time");
+            }
 
             order.setPartsOrdered(true);
             return order;
