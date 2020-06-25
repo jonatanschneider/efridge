@@ -22,8 +22,7 @@ public class Product implements Serializable {
 
     }
 
-    public Product(String id, String name, int productionTime, Set<ProductPart> productParts) {
-        this.id = id;
+    public Product(String name, int productionTime, Set<ProductPart> productParts) {
         this.name = name;
         this.productionTime = productionTime;
         this.productParts = productParts;
@@ -33,9 +32,6 @@ public class Product implements Serializable {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public String getName() {
         return name;
