@@ -11,6 +11,8 @@ import javax.jms.ObjectMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import javax.persistence.Query;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -35,7 +37,12 @@ public class Headquarter {
     }
 
     private void setup() throws JMSException {
-        this.products = Config.initializeProducts(location);
+        this.emf = DatabaseUtility.getEntityManager(location);
+        this.em = emf.createEntityManager();
+
+        Query query = em.createQuery("SELECT p FROM Product p");
+        this.products = query.getResultList();
+        this.products.sort(Comparator.comparing(Product::getId));
 
         var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
         var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
@@ -43,8 +50,7 @@ public class Headquarter {
         var finishedTickets = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
         ticketPublisher = new Publisher(Config.TICKET_QUEUE);
-        this.emf = DatabaseUtility.getEntityManager(location);
-        this.em = emf.createEntityManager();
+
     }
 
     private void processIncomingOrder(FridgeOrder order) throws JMSException {

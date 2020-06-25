@@ -7,9 +7,9 @@ import java.util.Set;
 
 @Entity
 public class Product implements Serializable {
-    @Id @GeneratedValue(generator="system-uuid")
-    @GenericGenerator(name="system-uuid", strategy = "uuid")
-    private String id;
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private int id;
 
     private String name;
 
@@ -28,10 +28,9 @@ public class Product implements Serializable {
         this.productParts = productParts;
     }
 
-    public String getId() {
+    public int getId() {
         return id;
     }
-
 
     public String getName() {
         return name;
