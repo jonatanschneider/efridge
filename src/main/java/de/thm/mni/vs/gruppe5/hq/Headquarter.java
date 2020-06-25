@@ -15,13 +15,14 @@ import java.util.Date;
 import java.util.List;
 
 public class Headquarter {
+    private final Location location = Location.HEADQUARTER;
     private Publisher orderPublisher;
     private Subscriber incomingOrdersSubscriber;
     private Subscriber finishedOrdersSubscriber;
     private Publisher ticketPublisher;
     private List<Product> products;
-    private final EntityManagerFactory emf = Persistence.createEntityManagerFactory("eFridge-hq");
-    private final EntityManager em = emf.createEntityManager();
+    private EntityManagerFactory emf;
+    private EntityManager em;
 
     public static void main(String[] args) {
        try {
@@ -34,13 +35,16 @@ public class Headquarter {
     }
 
     private void setup() throws JMSException {
-        this.products = Config.initializeProducts(Location.HEADQUARTER);
+        this.products = Config.initializeProducts(location);
+
         var incomingOrders = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
         var finishedOrders = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
         var incomingTickets = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
         var finishedTickets = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
         orderPublisher = new Publisher(Config.ORDER_QUEUE);
         ticketPublisher = new Publisher(Config.TICKET_QUEUE);
+        this.emf = DatabaseUtility.getEntityManager(location);
+        this.em = emf.createEntityManager();
     }
 
     private void processIncomingOrder(FridgeOrder order) throws JMSException {

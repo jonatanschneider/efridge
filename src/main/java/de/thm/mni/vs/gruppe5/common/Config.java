@@ -25,13 +25,7 @@ public class Config {
     public static final float CHANCE_OF_CLOSING_TICKET = 0.4f;
 
     public static List<Product> initializeProducts(Location location) {
-        EntityManagerFactory emf = null;
-        switch (location) {
-            case HEADQUARTER -> emf = Persistence.createEntityManagerFactory("eFridge-hq");
-            case USA -> emf = Persistence.createEntityManagerFactory("eFridge-us");
-            case CHINA -> emf = Persistence.createEntityManagerFactory("eFridge-cn");
-        }
-
+        EntityManagerFactory emf = DatabaseUtility.getEntityManager(location);
         var em = emf.createEntityManager();
 
         /* Only write products to database if they don't exist already */

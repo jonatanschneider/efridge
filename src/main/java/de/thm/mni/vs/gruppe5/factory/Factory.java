@@ -3,17 +3,20 @@ package de.thm.mni.vs.gruppe5.factory;
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
 import de.thm.mni.vs.gruppe5.factory.report.ReportTask;
+import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
 
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
 
 public class Factory {
-    private Location location;
+    private final Location location;
     private IProduction production;
     private Publisher finishedOrderPublisher;
     private Publisher reportPublisher;
@@ -21,6 +24,8 @@ public class Factory {
     private int maxCapacity;
     private List<FridgeOrder> currentOrders;
     private Subscriber orderSubscriber;
+    private EntityManagerFactory emf;
+    private EntityManager em;
 
     public static void main(String[] args) {
         Location location;
@@ -71,6 +76,8 @@ public class Factory {
         System.out.println("Factory - " + location.name()
                 + " - productionTimeFactor: " + productionTimeFactor
                 + " - maxCapacity: " + maxCapacity);
+        this.emf = DatabaseUtility.getEntityManager(location);
+        this.em = emf.createEntityManager();
     }
 
     private void setup() throws JMSException {

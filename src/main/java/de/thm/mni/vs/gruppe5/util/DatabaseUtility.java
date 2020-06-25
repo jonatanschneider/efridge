@@ -1,7 +1,11 @@
 package de.thm.mni.vs.gruppe5.util;
 
+import de.thm.mni.vs.gruppe5.common.Location;
+
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import java.io.Serializable;
 
 public class DatabaseUtility {
@@ -37,6 +41,20 @@ public class DatabaseUtility {
         } catch (Exception e) {
             e.printStackTrace();
             em.getTransaction().rollback();
+        }
+    }
+
+    /**
+     * Get instance of EntityManagerFactory for specific location
+     * @param location
+     * @return EntitiyManagerFactory for persistenceUnit of the given location, null if no valid location was given
+     */
+    public static EntityManagerFactory getEntityManager(Location location) {
+        switch (location) {
+            case HEADQUARTER -> { return Persistence.createEntityManagerFactory("eFridge-hq"); }
+            case USA -> { return Persistence.createEntityManagerFactory("eFridge-us"); }
+            case CHINA -> { return Persistence.createEntityManagerFactory("eFridge-cn"); }
+            default -> { return null; }
         }
     }
 
