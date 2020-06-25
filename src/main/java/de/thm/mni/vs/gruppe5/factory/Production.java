@@ -41,9 +41,9 @@ public class Production implements IProduction {
 
             order.getOrderItems().forEach(orderItem -> {
                 var product = orderItem.getProduct();
-                var time = (long) (product.getProductionTime() * orderItem.getQuantity() * factoryTimeFactor);
+                var time = (int) (product.getProductionTime() * orderItem.getQuantity() * factoryTimeFactor);
                 System.out.println("Producing '" + product.getName() + "' (" + orderItem.getQuantity() + "x): " + time + " seconds");
-                orderItem.waitCompletition(time);
+                orderItem.init(time);
                 performanceTracker.finishedOrderItem(orderItem, time);
             });
 
