@@ -1,9 +1,12 @@
 package de.thm.mni.vs.gruppe5.hq;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.*;
 import io.javalin.Javalin;
+import io.javalin.http.Context;
+import io.javalin.plugin.json.JavalinJson;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
 
 import javax.jms.JMSException;
@@ -20,7 +23,6 @@ import java.util.List;
 public class Headquarter {
     private final static Location location = Location.HEADQUARTER;
     private final List<Product> products;
-    private final Subscriber incomingOrdersSubscriber;
     private final Subscriber finishedOrdersSubscriber;
     private final Subscriber incomingTicketsSubscriber;
     private final Subscriber finishedTicketsSubscriber;
@@ -48,7 +50,6 @@ public class Headquarter {
         this.products.sort(Comparator.comparing(Product::getId));
         em.close();
 
-        this.incomingOrdersSubscriber = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
         this.finishedOrdersSubscriber = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
         this.incomingTicketsSubscriber = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
         this.finishedTicketsSubscriber = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
@@ -56,14 +57,28 @@ public class Headquarter {
         this.orderPublisher = new Publisher(Config.ORDER_QUEUE);
         this.ticketPublisher = new Publisher(Config.TICKET_QUEUE);
 
+        Gson gson = new GsonBuilder().create();
+        JavalinJson.setFromJsonMapper(gson::fromJson);
+        JavalinJson.setToJsonMapper(gson::toJson);
+
         server = Javalin.create().start(7000);
-        server.get("/", ctx -> ctx.result("Hello World"));
+        server.post("/orders", this::createOrder);
     }
 
-    private void processIncomingOrder(FridgeOrder order) throws JMSException {
-        System.out.println("Send order to factories: " + order);
+    private void createOrder(Context ctx) throws JMSException {
+        var frontendOrder = ctx.bodyAsClass(FrontendOrder.class);
+
+        if (!frontendOrder.isValid()) {
+            System.out.println("Discarding invalid order " + frontendOrder);
+            ctx.status(400);
+            return;
+        }
+
+        var order = buildFridgeOrder(frontendOrder);
         DatabaseUtility.persist(emf, order);
-        this.orderPublisher.publish(order);
+        System.out.println("Send order to factories: " + order.toString());
+        orderPublisher.publish(order);
+        ctx.status(201);
     }
 
     private void processIncomingTicket(SupportTicket ticket) throws JMSException {
@@ -72,26 +87,6 @@ public class Headquarter {
         this.ticketPublisher.publish(ticket);
     }
 
-    private final MessageListener incomingOrderListener = m -> {
-        try {
-
-            var objectMessage = (ObjectMessage) m;
-            var frontendOrder = new Gson().fromJson((String) objectMessage.getObject(), FrontendOrder.class);
-
-            if (!frontendOrder.isValid()){
-                System.out.println("Discarding invalid order " + frontendOrder);
-                return;
-            }
-
-            var fridgeOrder = buildFridgeOrder(frontendOrder);
-
-            System.out.println("Received order: " + fridgeOrder.toString());
-
-            processIncomingOrder(fridgeOrder);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    };
 
     private final MessageListener incomingTicketListener = m -> {
         try {
@@ -194,9 +189,6 @@ public class Headquarter {
 
             if (orderPublisher != null) {
                 orderPublisher.close();
-            }
-            if (incomingOrdersSubscriber != null) {
-                incomingOrdersSubscriber.close();
             }
             if (finishedOrdersSubscriber != null) {
                 finishedOrdersSubscriber.close();
