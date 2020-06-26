@@ -22,6 +22,7 @@ public class FridgeOrder implements Serializable, Completable {
 
     private boolean partsOrdered;
 
+    @Temporal(TemporalType.TIMESTAMP)
     private Date completedAt;
 
     public FridgeOrder() {

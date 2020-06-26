@@ -18,6 +18,7 @@ public class OrderItem implements Serializable, Completable {
 
     private int quantity;
 
+    @Temporal(TemporalType.TIMESTAMP)
     private Date completedAt;
 
 
