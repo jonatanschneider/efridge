@@ -23,6 +23,7 @@ public class Headquarter {
     private final Subscriber finishedOrdersSubscriber;
     private final Subscriber incomingTicketsSubscriber;
     private final Subscriber finishedTicketsSubscriber;
+    private Subscriber reportSubscriber;
     private Publisher orderPublisher;
     private Publisher ticketPublisher;
     private EntityManagerFactory emf;
@@ -50,6 +51,7 @@ public class Headquarter {
         this.finishedOrdersSubscriber = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
         this.incomingTicketsSubscriber = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
         this.finishedTicketsSubscriber = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
+        this.reportSubscriber = new Subscriber(Config.REPORT_QUEUE, incomingReportListener);
         this.orderPublisher = new Publisher(Config.ORDER_QUEUE);
         this.ticketPublisher = new Publisher(Config.TICKET_QUEUE);
     }
@@ -164,12 +166,28 @@ public class Headquarter {
         }
     };
 
+    private final MessageListener incomingReportListener = m -> {
+        if (m instanceof ObjectMessage) {
+            try {
+                var object = ((ObjectMessage) m).getObject();
+                if (object instanceof Performance) {
+                    var performance = (Performance) object;
+                    System.out.println("Received performance: " + performance);
+                    DatabaseUtility.persist(emf, performance);
+                }
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
     private Thread closeResources() {
         return new Thread(() -> {
             System.out.println("Shutdown headquarter");
             System.out.println("Closing database connection");
             emf.close();
             System.out.println("Closing ActiveMQ connections");
+
             if (orderPublisher != null) {
                 orderPublisher.close();
             }
@@ -188,6 +206,10 @@ public class Headquarter {
             }
             if (finishedTicketsSubscriber != null) {
                 finishedTicketsSubscriber.close();
+            }
+
+            if (reportSubscriber != null) {
+                reportSubscriber.close();
             }
         });
     }

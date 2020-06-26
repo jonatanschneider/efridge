@@ -6,7 +6,6 @@ create table Part (id varchar(255) not null, cost float8 not null, supplier int4
 create table Product (id int4 not null, name varchar(255), productionTime int4 not null, primary key (id))
 create table Product_ProductPart (Product_id int4 not null, productParts_id varchar(255) not null, primary key (Product_id, productParts_id))
 create table ProductPart (id varchar(255) not null, quantity int4 not null, part_id varchar(255), primary key (id))
-create table SupportTicket (id varchar(255) not null, closingTime timestamp, creationTime timestamp, customerId varchar(255), isClosed boolean not null, text varchar(5000), primary key (id))
 alter table if exists FridgeOrder_OrderItem add constraint UK_kp8vrq7nwa5yllmgv3rftrj6o unique (orderItems_id)
 alter table if exists Product_ProductPart add constraint UK_709wurouqqp1njw8jqkc5x652 unique (productParts_id)
 alter table if exists FridgeOrder_OrderItem add constraint FKm8mxjwjm3lprc2ut2b0w4p57i foreign key (orderItems_id) references OrderItem
