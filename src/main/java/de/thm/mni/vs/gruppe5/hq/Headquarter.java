@@ -16,6 +16,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
+import java.sql.SQLOutput;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -28,6 +29,8 @@ public class Headquarter {
     private Subscriber reportSubscriber;
     private Publisher orderPublisher;
     private Publisher ticketPublisher;
+    private Publisher updatePartCostPublisherUS;
+    private Publisher updatePartCostPublisherCN;
     private EntityManagerFactory emf;
     private Javalin server;
 
@@ -54,6 +57,8 @@ public class Headquarter {
         this.reportSubscriber = new Subscriber(Config.REPORT_QUEUE, incomingReportListener);
         this.orderPublisher = new Publisher(Config.ORDER_QUEUE);
         this.ticketPublisher = new Publisher(Config.TICKET_QUEUE);
+        this.updatePartCostPublisherUS = new Publisher(Config.UPDATE_PARTS_COST_TOPIC_US);
+        this.updatePartCostPublisherCN = new Publisher(Config.UPDATE_PARTS_COST_TOPIC_CN);
 
         Gson gson = new GsonBuilder().create();
         JavalinJson.setFromJsonMapper(gson::fromJson);
@@ -100,6 +105,20 @@ public class Headquarter {
         System.out.println("Send ticket to support centers: " + ticket.toString());
         ticketPublisher.publish(ticket);
         ctx.status(201);
+    }
+
+    private void updatePart(String partId, double cost) throws JMSException {
+        var em = emf.createEntityManager();
+        var part = em.find(Part.class, partId);
+        em.close();
+        part.setCost(cost);
+
+        DatabaseUtility.merge(emf, part);
+
+        System.out.println("Publish update part cost to USA " + part);
+        this.updatePartCostPublisherUS.publish(part);
+        System.out.println("Publish update part cost to China " + part);
+        this.updatePartCostPublisherCN.publish(part);
     }
 
     private FridgeOrder buildFridgeOrder(FrontendOrder frontendOrder) {

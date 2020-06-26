@@ -12,6 +12,8 @@ public class Config {
     public static final String ORDER_QUEUE = "orderQueue";
     public static final String TICKET_QUEUE = "ticketQueue";
     public static final String REPORT_QUEUE = "reportQueue";
+    public static final String UPDATE_PARTS_COST_TOPIC_US = "updatePartsTopic-us";
+    public static final String UPDATE_PARTS_COST_TOPIC_CN = "updatePartsTopic-cn";
     public static final float PRODUCTION_COST_PER_SECOND = 0.5f;
     public static final long DAY_DURATION_IN_SECONDS = 60;
     public static final long REPORTS_PER_DAY = 4;
