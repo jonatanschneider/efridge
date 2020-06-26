@@ -62,6 +62,7 @@ public class Headquarter {
         server = Javalin.create().start(7000);
         server.post("/orders", this::createOrder);
         server.post("/tickets", this::createTicket);
+        server.get("/tickets/:id", this::getTicket);
     }
 
     private void createOrder(Context ctx) throws JMSException {
@@ -78,6 +79,11 @@ public class Headquarter {
         System.out.println("Send order to factories: " + order.toString());
         orderPublisher.publish(order);
         ctx.status(201);
+    }
+
+    private void getTicket(Context ctx) {
+        EntityManager em = emf.createEntityManager();
+        ctx.json(em.find(SupportTicket.class, ctx.pathParam("id")));
     }
 
     private void createTicket(Context ctx) throws JMSException {
