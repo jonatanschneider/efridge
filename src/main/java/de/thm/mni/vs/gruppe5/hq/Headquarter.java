@@ -59,10 +59,10 @@ public class Headquarter {
         JavalinJson.setFromJsonMapper(gson::fromJson);
         JavalinJson.setToJsonMapper(gson::toJson);
 
-        server = Javalin.create().start(7000);
-        server.post("/orders", this::createOrder);
-        server.post("/tickets", this::createTicket);
-        server.get("/tickets/:id", this::getTicket);
+        server = Javalin.create().start(Config.SERVER_PORT);
+        server.post(Config.ORDER_PATH, this::createOrder);
+        server.post(Config.TICKET_PATH, this::createTicket);
+        server.get(Config.TICKET_PATH + "/:id", this::getTicket);
     }
 
     private void createOrder(Context ctx) throws JMSException {
