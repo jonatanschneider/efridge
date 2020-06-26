@@ -10,11 +10,13 @@ import org.hibernate.criterion.Order;
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Timer;
 import java.util.concurrent.CompletableFuture;
-import static de.thm.mni.vs.gruppe5.common.DestinationType.QUEUE;
-import static de.thm.mni.vs.gruppe5.common.DestinationType.TOPIC;
 
 public class Factory {
     private final Location location;
@@ -75,10 +77,10 @@ public class Factory {
         this.emf = DatabaseUtility.getEntityManager(this.location);
 
         // Initialize publisher and subscriber
-        this.orderSubscriber = new Subscriber(QUEUE, Config.ORDER_QUEUE, processOrder);
-        this.finishedOrderPublisher = new Publisher(QUEUE, Config.FINISHED_ORDER_QUEUE);
+        this.orderSubscriber = new Subscriber(Config.ORDER_QUEUE, processOrder);
+        this.finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
         this.production = new Production();
-        this.reportPublisher = new Publisher(QUEUE, Config.REPORT_QUEUE);
+        this.reportPublisher = new Publisher(Config.REPORT_QUEUE);
 
         // Initialize and start report task
         var reportTask = new ReportTask(reportPublisher);

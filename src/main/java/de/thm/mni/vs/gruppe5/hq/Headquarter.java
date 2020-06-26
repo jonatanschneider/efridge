@@ -14,12 +14,11 @@ import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import javax.persistence.Query;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import static de.thm.mni.vs.gruppe5.common.DestinationType.QUEUE;
-import static de.thm.mni.vs.gruppe5.common.DestinationType.TOPIC;
 
 public class Headquarter {
     private final static Location location = Location.HEADQUARTER;
@@ -50,11 +49,11 @@ public class Headquarter {
         this.products.sort(Comparator.comparing(Product::getId));
         em.close();
 
-        this.finishedOrdersSubscriber = new Subscriber(QUEUE, Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
-        this.finishedTicketsSubscriber = new Subscriber(QUEUE, Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
-        this.reportSubscriber = new Subscriber(QUEUE, Config.REPORT_QUEUE, incomingReportListener);
-        this.orderPublisher = new Publisher(QUEUE, Config.ORDER_QUEUE);
-        this.ticketPublisher = new Publisher(QUEUE, Config.TICKET_QUEUE);
+        this.finishedOrdersSubscriber = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
+        this.finishedTicketsSubscriber = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
+        this.reportSubscriber = new Subscriber(Config.REPORT_QUEUE, incomingReportListener);
+        this.orderPublisher = new Publisher(Config.ORDER_QUEUE);
+        this.ticketPublisher = new Publisher(Config.TICKET_QUEUE);
 
         Gson gson = new GsonBuilder().create();
         JavalinJson.setFromJsonMapper(gson::fromJson);
