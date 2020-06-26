@@ -1,17 +1,15 @@
 package de.thm.mni.vs.gruppe5.common.model;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Random;
+import java.util.UUID;
 
 @Entity
 public class SupportTicket implements Serializable, Completable {
-    @Id @GeneratedValue(generator="system-uuid")
-    @GenericGenerator(name="system-uuid", strategy = "uuid")
-    private String id;
+    @Id
+    private String id = UUID.randomUUID().toString();
 
     private String customerId;
 

@@ -46,6 +46,8 @@ public class DatabaseUtility {
             case HEADQUARTER -> { return Persistence.createEntityManagerFactory("eFridge-hq"); }
             case USA -> { return Persistence.createEntityManagerFactory("eFridge-us"); }
             case CHINA -> { return Persistence.createEntityManagerFactory("eFridge-cn"); }
+            case MEXICO -> { return Persistence.createEntityManagerFactory("eFridge-mx"); }
+            case INDIA -> { return Persistence.createEntityManagerFactory("eFridge-in"); }
             default -> { return null; }
         }
     }

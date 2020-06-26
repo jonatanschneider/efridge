@@ -42,14 +42,4 @@ public class FrontendTicket implements FrontendItem {
 
         return this;
     }
-
-    @Override
-    public void send(Publisher p) throws JMSException {
-        if (!this.isValid()) {
-            System.out.println("Ticket is invalid, not publishing");
-            return;
-        }
-        System.out.println("Publish " + toString());
-        p.publish(new Gson().toJson(this));
-    }
 }

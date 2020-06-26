@@ -1,8 +1,12 @@
 package de.thm.mni.vs.gruppe5.common;
 
 public class Config {
-    public static final String INCOMING_ORDER_QUEUE = "incomingOrderQueue";
-    public static final String INCOMING_TICKET_QUEUE = "incomingTicketQueue";
+    public static final int SERVER_PORT = 7000;
+    public static final String SERVER_URL = "http://localhost:" + SERVER_PORT;
+    public static final String ORDER_PATH  = "/orders";
+    public static final String ORDER_URL = SERVER_URL + ORDER_PATH;
+    public static final String TICKET_PATH  = "/tickets";
+    public static final String TICKET_URL = SERVER_URL + TICKET_PATH;
     public static final String FINISHED_ORDER_QUEUE = "finishedOrderQueue";
     public static final String FINISHED_TICKET_QUEUE = "finishedTicketQueue";
     public static final String ORDER_QUEUE = "orderQueue";
