@@ -24,7 +24,6 @@ public class Headquarter {
     private final static Location location = Location.HEADQUARTER;
     private final List<Product> products;
     private final Subscriber finishedOrdersSubscriber;
-    private final Subscriber incomingTicketsSubscriber;
     private final Subscriber finishedTicketsSubscriber;
     private Subscriber reportSubscriber;
     private Publisher orderPublisher;
@@ -51,7 +50,6 @@ public class Headquarter {
         em.close();
 
         this.finishedOrdersSubscriber = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
-        this.incomingTicketsSubscriber = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
         this.finishedTicketsSubscriber = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
         this.reportSubscriber = new Subscriber(Config.REPORT_QUEUE, incomingReportListener);
         this.orderPublisher = new Publisher(Config.ORDER_QUEUE);
@@ -63,6 +61,7 @@ public class Headquarter {
 
         server = Javalin.create().start(7000);
         server.post("/orders", this::createOrder);
+        server.post("/tickets", this::createTicket);
     }
 
     private void createOrder(Context ctx) throws JMSException {
@@ -81,33 +80,21 @@ public class Headquarter {
         ctx.status(201);
     }
 
-    private void processIncomingTicket(SupportTicket ticket) throws JMSException {
-        System.out.println("Send ticket to support centers: " + ticket);
-        DatabaseUtility.persist(emf, ticket);
-        this.ticketPublisher.publish(ticket);
-    }
+    private void createTicket(Context ctx) throws JMSException {
+        var frontendTicket = ctx.bodyAsClass(FrontendTicket.class);
 
-
-    private final MessageListener incomingTicketListener = m -> {
-        try {
-
-            var objectMessage = (ObjectMessage) m;
-            var frontendTicket = new Gson().fromJson((String) objectMessage.getObject(), FrontendTicket.class);
-
-            if (!frontendTicket.isValid()){
-                System.out.println("Discarding invalid ticket " + frontendTicket);
-                return;
-            }
-
-            var supportTicket = buildSupportTicket(frontendTicket);
-
-            System.out.println("Received support ticket: " + frontendTicket.toString());
-
-            processIncomingTicket(supportTicket);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (!frontendTicket.isValid()) {
+            System.out.println("Discarding invalid ticket " + frontendTicket);
+            ctx.status(400);
+            return;
         }
-    };
+
+        var ticket = buildSupportTicket(frontendTicket);
+        DatabaseUtility.persist(emf, ticket);
+        System.out.println("Send ticket to support centers: " + ticket.toString());
+        ticketPublisher.publish(ticket);
+        ctx.status(201);
+    }
 
     private FridgeOrder buildFridgeOrder(FrontendOrder frontendOrder) {
         var order = new FridgeOrder();
@@ -196,9 +183,6 @@ public class Headquarter {
 
             if (ticketPublisher != null) {
                 ticketPublisher.close();
-            }
-            if (incomingTicketsSubscriber != null) {
-                incomingTicketsSubscriber.close();
             }
             if (finishedTicketsSubscriber != null) {
                 finishedTicketsSubscriber.close();
