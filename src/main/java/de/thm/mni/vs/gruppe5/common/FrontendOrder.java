@@ -3,6 +3,7 @@ package de.thm.mni.vs.gruppe5.common;
 import com.google.gson.Gson;
 
 import javax.jms.JMSException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -64,16 +65,6 @@ public class FrontendOrder implements FrontendItem {
 
         this.setOrderProductIdsWithQuantity(productIdsWithQuantity);
         return this;
-    }
-
-    @Override
-    public void send(Publisher p) throws JMSException {
-        if (!this.isValid()) {
-            System.out.println("Order is invalid, not publishing");
-            return;
-        }
-        System.out.println("Publish " + toString());
-        p.publish(new Gson().toJson(this));
     }
 
     @Override
