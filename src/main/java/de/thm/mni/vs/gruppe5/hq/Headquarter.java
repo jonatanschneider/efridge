@@ -1,8 +1,12 @@
 package de.thm.mni.vs.gruppe5.hq;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.*;
+import io.javalin.Javalin;
+import io.javalin.http.Context;
+import io.javalin.plugin.json.JavalinJson;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
 
 import javax.jms.JMSException;
@@ -19,15 +23,13 @@ import java.util.List;
 public class Headquarter {
     private final static Location location = Location.HEADQUARTER;
     private final List<Product> products;
-    private final Subscriber incomingOrdersSubscriber;
     private final Subscriber finishedOrdersSubscriber;
-    private final Subscriber incomingTicketsSubscriber;
     private final Subscriber finishedTicketsSubscriber;
     private Subscriber reportSubscriber;
     private Publisher orderPublisher;
     private Publisher ticketPublisher;
     private EntityManagerFactory emf;
-
+    private Javalin server;
 
     public static void main(String[] args) {
        try {
@@ -47,68 +49,58 @@ public class Headquarter {
         this.products.sort(Comparator.comparing(Product::getId));
         em.close();
 
-        this.incomingOrdersSubscriber = new Subscriber(Config.INCOMING_ORDER_QUEUE, incomingOrderListener);
         this.finishedOrdersSubscriber = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
-        this.incomingTicketsSubscriber = new Subscriber(Config.INCOMING_TICKET_QUEUE, incomingTicketListener);
         this.finishedTicketsSubscriber = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
         this.reportSubscriber = new Subscriber(Config.REPORT_QUEUE, incomingReportListener);
         this.orderPublisher = new Publisher(Config.ORDER_QUEUE);
         this.ticketPublisher = new Publisher(Config.TICKET_QUEUE);
+
+        Gson gson = new GsonBuilder().create();
+        JavalinJson.setFromJsonMapper(gson::fromJson);
+        JavalinJson.setToJsonMapper(gson::toJson);
+
+        server = Javalin.create().start(Config.SERVER_PORT);
+        server.post(Config.ORDER_PATH, this::createOrder);
+        server.post(Config.TICKET_PATH, this::createTicket);
+        server.get(Config.TICKET_PATH + "/:id", this::getTicket);
     }
 
-    private void processIncomingOrder(FridgeOrder order) throws JMSException {
-        System.out.println("Send order to factories: " + order);
+    private void createOrder(Context ctx) throws JMSException {
+        var frontendOrder = ctx.bodyAsClass(FrontendOrder.class);
+
+        if (!frontendOrder.isValid()) {
+            System.out.println("Discarding invalid order " + frontendOrder);
+            ctx.status(400);
+            return;
+        }
+
+        var order = buildFridgeOrder(frontendOrder);
         DatabaseUtility.persist(emf, order);
-        this.orderPublisher.publish(order);
+        System.out.println("Send order to factories: " + order.toString());
+        orderPublisher.publish(order);
+        ctx.status(201);
     }
 
-    private void processIncomingTicket(SupportTicket ticket) throws JMSException {
-        System.out.println("Send ticket to support centers: " + ticket);
+    private void getTicket(Context ctx) {
+        EntityManager em = emf.createEntityManager();
+        ctx.json(em.find(SupportTicket.class, ctx.pathParam("id")));
+    }
+
+    private void createTicket(Context ctx) throws JMSException {
+        var frontendTicket = ctx.bodyAsClass(FrontendTicket.class);
+
+        if (!frontendTicket.isValid()) {
+            System.out.println("Discarding invalid ticket " + frontendTicket);
+            ctx.status(400);
+            return;
+        }
+
+        var ticket = buildSupportTicket(frontendTicket);
         DatabaseUtility.persist(emf, ticket);
-        this.ticketPublisher.publish(ticket);
+        System.out.println("Send ticket to support centers: " + ticket.toString());
+        ticketPublisher.publish(ticket);
+        ctx.status(201);
     }
-
-    private final MessageListener incomingOrderListener = m -> {
-        try {
-
-            var objectMessage = (ObjectMessage) m;
-            var frontendOrder = new Gson().fromJson((String) objectMessage.getObject(), FrontendOrder.class);
-
-            if (!frontendOrder.isValid()){
-                System.out.println("Discarding invalid order " + frontendOrder);
-                return;
-            }
-
-            var fridgeOrder = buildFridgeOrder(frontendOrder);
-
-            System.out.println("Received order: " + fridgeOrder.toString());
-
-            processIncomingOrder(fridgeOrder);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    };
-
-    private final MessageListener incomingTicketListener = m -> {
-        try {
-
-            var objectMessage = (ObjectMessage) m;
-            var frontendTicket = new Gson().fromJson((String) objectMessage.getObject(), FrontendTicket.class);
-
-            if (!frontendTicket.isValid()){
-                System.out.println("Discarding invalid ticket " + frontendTicket);
-                return;
-            }
-
-            var supportTicket = buildSupportTicket(frontendTicket);
-
-            System.out.println("Received support ticket: " + frontendTicket.toString());
-
-            processIncomingTicket(supportTicket);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    };
 
     private FridgeOrder buildFridgeOrder(FrontendOrder frontendOrder) {
         var order = new FridgeOrder();
@@ -191,18 +183,12 @@ public class Headquarter {
             if (orderPublisher != null) {
                 orderPublisher.close();
             }
-            if (incomingOrdersSubscriber != null) {
-                incomingOrdersSubscriber.close();
-            }
             if (finishedOrdersSubscriber != null) {
                 finishedOrdersSubscriber.close();
             }
 
             if (ticketPublisher != null) {
                 ticketPublisher.close();
-            }
-            if (incomingTicketsSubscriber != null) {
-                incomingTicketsSubscriber.close();
             }
             if (finishedTicketsSubscriber != null) {
                 finishedTicketsSubscriber.close();

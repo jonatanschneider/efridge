@@ -10,7 +10,6 @@ import java.nio.file.Paths;
 public interface FrontendItem {
     boolean isValid();
     FrontendItem interactiveCreation();
-    void send(Publisher p) throws JMSException;
 
     static FrontendItem parseJsonFile(String path, Class<? extends FrontendItem> c) throws IOException {
         var reader = Files.newBufferedReader(Paths.get(path));
