@@ -3,6 +3,7 @@ package de.thm.mni.vs.gruppe5.hq;
 import com.google.gson.Gson;
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.*;
+import io.javalin.Javalin;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
 
 import javax.jms.JMSException;
@@ -27,7 +28,7 @@ public class Headquarter {
     private Publisher orderPublisher;
     private Publisher ticketPublisher;
     private EntityManagerFactory emf;
-
+    private Javalin server;
 
     public static void main(String[] args) {
        try {
@@ -54,6 +55,9 @@ public class Headquarter {
         this.reportSubscriber = new Subscriber(Config.REPORT_QUEUE, incomingReportListener);
         this.orderPublisher = new Publisher(Config.ORDER_QUEUE);
         this.ticketPublisher = new Publisher(Config.TICKET_QUEUE);
+
+        server = Javalin.create().start(7000);
+        server.get("/", ctx -> ctx.result("Hello World"));
     }
 
     private void processIncomingOrder(FridgeOrder order) throws JMSException {
