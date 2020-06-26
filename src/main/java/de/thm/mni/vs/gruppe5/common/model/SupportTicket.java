@@ -1,13 +1,15 @@
 package de.thm.mni.vs.gruppe5.common.model;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 
 @Entity
 public class SupportTicket implements Serializable {
-    @Id
-    @GeneratedValue
+    @Id @GeneratedValue(generator="system-uuid")
+    @GenericGenerator(name="system-uuid", strategy = "uuid")
     private String id;
 
     private String customerId;
@@ -20,6 +22,8 @@ public class SupportTicket implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date closingTime;
 
+    // Use length of 5000 characters, as jpa doesnt allow to simply set the number to the maximum
+    @Column(length = 5000)
     private String text;
 
     public SupportTicket() {

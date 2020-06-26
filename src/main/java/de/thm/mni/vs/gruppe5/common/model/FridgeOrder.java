@@ -6,12 +6,12 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 public class FridgeOrder implements Serializable, Completable {
     @Id
-    @GeneratedValue
-    private String id;
+    private String id = UUID.randomUUID().toString();
 
     private String customerId;
 
