@@ -7,25 +7,29 @@ import java.io.Serializable;
 
 public class Publisher implements AutoCloseable {
     private final Connection connection;
-    private Queue queue;
-    private MessageProducer producer;
+    private final MessageProducer producer;
     private final Session session;
+    private Destination destination;
 
     /**
      * Create an instance to publish messages later
      *
-     * @param queueName Name of the channel to publish to
+     * @param destinationName Name of the destination to publish to
      * @throws JMSException Thrown in case of internal server error
      */
-    public Publisher(String queueName) throws JMSException {
+    public Publisher(DestinationType type, String destinationName) throws JMSException {
         var connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnectionFactory.DEFAULT_BROKER_URL);
         connectionFactory.setTrustAllPackages(true);
         connection = connectionFactory.createConnection();
         connection.start();
 
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        queue = session.createQueue(queueName);
-        producer = session.createProducer(queue);
+        switch (type) {
+            case QUEUE -> destination = session.createQueue(destinationName);
+            case TOPIC -> destination = session.createTopic(destinationName);
+        }
+
+        producer = session.createProducer(destination);
     }
 
     /**
