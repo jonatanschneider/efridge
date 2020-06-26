@@ -4,12 +4,12 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 public class FridgeOrder implements Serializable {
     @Id
-    @GeneratedValue
-    private String id;
+    private String id = UUID.randomUUID().toString();
 
     private String customerId;
 

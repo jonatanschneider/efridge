@@ -1,4 +1,6 @@
 package de.thm.mni.vs.gruppe5.common.model;
+import org.hibernate.annotations.GenericGenerator;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Set;
@@ -6,7 +8,8 @@ import java.util.Set;
 @Entity
 public class Product implements Serializable {
     @Id
-    private String id;
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private int id;
 
     private String name;
 
@@ -19,19 +22,14 @@ public class Product implements Serializable {
 
     }
 
-    public Product(String id, String name, int productionTime, Set<ProductPart> productParts) {
-        this.id = id;
+    public Product(String name, int productionTime, Set<ProductPart> productParts) {
         this.name = name;
         this.productionTime = productionTime;
         this.productParts = productParts;
     }
 
-    public String getId() {
+    public int getId() {
         return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getName() {
