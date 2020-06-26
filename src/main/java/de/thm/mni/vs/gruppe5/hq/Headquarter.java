@@ -14,9 +14,7 @@ import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import javax.persistence.Query;
-import java.sql.SQLOutput;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -26,11 +24,11 @@ public class Headquarter {
     private final List<Product> products;
     private final Subscriber finishedOrdersSubscriber;
     private final Subscriber finishedTicketsSubscriber;
-    private Subscriber reportSubscriber;
-    private Publisher orderPublisher;
+    private final Subscriber reportSubscriber;
+    private final Publisher orderPublisher;
+    private final Publisher updatePartCostPublisherUS;
+    private final Publisher updatePartCostPublisherCN;
     private Publisher ticketPublisher;
-    private Publisher updatePartCostPublisherUS;
-    private Publisher updatePartCostPublisherCN;
     private EntityManagerFactory emf;
     private Javalin server;
 
@@ -67,6 +65,7 @@ public class Headquarter {
         server = Javalin.create().start(Config.SERVER_PORT);
         server.post(Config.ORDER_PATH, this::createOrder);
         server.post(Config.TICKET_PATH, this::createTicket);
+        server.post(Config.PARTS_PATH + "/:id", this::updatePart);
         server.get(Config.TICKET_PATH + "/:id", this::getTicket);
     }
 
@@ -107,9 +106,10 @@ public class Headquarter {
         ctx.status(201);
     }
 
-    private void updatePart(String partId, double cost) throws JMSException {
+    private void updatePart(Context ctx) throws JMSException {
         var em = emf.createEntityManager();
-        var part = em.find(Part.class, partId);
+        var part = em.find(Part.class, ctx.pathParam("id"));
+        var cost = ctx.bodyAsClass(double.class);
         em.close();
         part.setCost(cost);
 
