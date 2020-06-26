@@ -1,7 +1,6 @@
 package de.thm.mni.vs.gruppe5.support;
 
 import de.thm.mni.vs.gruppe5.common.Config;
-import de.thm.mni.vs.gruppe5.util.TimeHelper;
 import de.thm.mni.vs.gruppe5.common.model.SupportTicket;
 
 import java.util.Date;
