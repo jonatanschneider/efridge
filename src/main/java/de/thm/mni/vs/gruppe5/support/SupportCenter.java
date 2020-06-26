@@ -63,7 +63,7 @@ public class SupportCenter {
             var ticket = (SupportTicket) objectMessage.getObject();
 
             System.out.println("Received ticket: " + ticket.toString());
-            DatabaseUtility.persist(emf, ticket);
+            DatabaseUtility.merge(emf, ticket);
             if (currentTickets.size() < agents) {
                 if (currentTickets.size() == agents - 1) {
                     ticketSubscriber.pause();
