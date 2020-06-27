@@ -2,10 +2,12 @@ package de.thm.mni.vs.gruppe5.util;
 
 import com.google.gson.Gson;
 import de.thm.mni.vs.gruppe5.common.*;
+import de.thm.mni.vs.gruppe5.common.model.Performance;
 import okhttp3.*;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class eFridgeCli {
@@ -28,29 +30,44 @@ public class eFridgeCli {
                 else throw new IllegalArgumentException("Invalid publisher type: " + args[0]);
 
             } else {
-                do {
-                    System.out.println("Select type (order, ticket, part)");
+                while (true) {
+                    System.out.println("Enter action: (order, ticket, performance)");
                     var line = scanner.nextLine().toLowerCase().trim();
-                    if (line.equals("order")) {
-                        item = new FrontendOrder().interactiveCreation();
-                        post(Config.ORDER_URL, item);
-                    } else if (line.equals("ticket")) {
-                        item = new FrontendTicket().interactiveCreation();
-                        post(Config.TICKET_URL, item);
-                    } else if (line.equals("part")) {
-                        System.out.println("Enter part id");
-                        var partId = scanner.nextLine();
-                        System.out.println("Enter new costs for part");
-                        var costs = scanner.nextDouble();
-                        scanner.nextLine();
-                        post(Config.PARTS_URL + "/" + partId, costs);
-                        return;
+                    switch (line) {
+                        case "order":
+                            item = new FrontendOrder().interactiveCreation();
+                            post(Config.ORDER_URL, item);
+                            break;
+                        case "ticket":
+                            item = new FrontendTicket().interactiveCreation();
+                            post(Config.TICKET_URL, item);
+                            break;
+                        case "performance":
+                            System.out.println(Arrays.toString(getPerformance()));
+                            break;
+                        case "part":
+                            System.out.println("Enter part id");
+                            var partId = scanner.nextLine();
+                            System.out.println("Enter new costs for part");
+                            var costs = scanner.nextDouble();
+                            scanner.nextLine();
+                            post(Config.PARTS_URL + "/" + partId, costs);
+                            break;
                     }
-                } while (item == null);
+                }
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    private static Performance[] getPerformance() throws IOException {
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(Config.PERFORMANCE_URL)
+                .build();
+        Response response = client.newCall(request).execute();
+        return new Gson().fromJson(response.body().string(), Performance[].class);
     }
 
     private static boolean post(String url, Object object) throws IOException {
