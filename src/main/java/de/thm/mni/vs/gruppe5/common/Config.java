@@ -9,6 +9,8 @@ public class Config {
     public static final String TICKET_URL = SERVER_URL + TICKET_PATH;
     public static final String PARTS_PATH = "/parts";
     public static final String PARTS_URL = SERVER_URL + PARTS_PATH;
+    public static final String PERFORMANCE_PATH  = "/performance";
+    public static final String PERFORMANCE_URL = SERVER_URL + PERFORMANCE_PATH;
     public static final String FINISHED_ORDER_QUEUE = "finishedOrderQueue";
     public static final String FINISHED_TICKET_QUEUE = "finishedTicketQueue";
     public static final String ORDER_QUEUE = "orderQueue";
