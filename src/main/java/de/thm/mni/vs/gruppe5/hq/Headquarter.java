@@ -90,6 +90,7 @@ public class Headquarter {
     private void getTicket(Context ctx) {
         EntityManager em = emf.createEntityManager();
         ctx.json(em.find(SupportTicket.class, ctx.pathParam("id")));
+        em.close();
     }
 
     private void createTicket(Context ctx) throws JMSException {
@@ -128,6 +129,7 @@ public class Headquarter {
         TypedQuery<Performance> query =
                 em.createQuery("SELECT p FROM Performance p", Performance.class);
         ctx.json(query.getResultList());
+        em.close();
     }
 
     private FridgeOrder buildFridgeOrder(FrontendOrder frontendOrder) {
