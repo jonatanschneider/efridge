@@ -41,7 +41,10 @@ services:
     image: healthcheck/postgres:alpine
     ports: ["5432:5432"]
     networks: [backing-services]
-    volumes: ["postgres-data-hq:/var/lib/postgresql/hq/data"]
+    volumes: [
+      "./init-headquarter.sql:/docker-entrypoint-initdb.d/init-headquarter.sql",
+      "postgres-data-hq:/var/lib/postgresql/hq/data"
+    ]
     environment:
       POSTGRES_DB: db
       POSTGRES_USER: user
@@ -52,7 +55,10 @@ services:
     image: healthcheck/postgres:alpine
     ports: ["5433:5432"]
     networks: [backing-services]
-    volumes: ["postgres-data-us:/var/lib/postgresql/us/data"]
+    volumes: [
+      "./init-factory.sql:/docker-entrypoint-initdb.d/init-factory.sql",
+      "postgres-data-us:/var/lib/postgresql/us/data"
+    ]
     environment:
       POSTGRES_DB: db
       POSTGRES_USER: user
@@ -63,7 +69,10 @@ services:
     image: healthcheck/postgres:alpine
     ports: ["5434:5432"]
     networks: [backing-services]
-    volumes: ["postgres-data-cn:/var/lib/postgresql/cn/data"]
+    volumes: [
+      "./init-factory.sql:/docker-entrypoint-initdb.d/init-factory.sql",
+      "postgres-data-cn:/var/lib/postgresql/cn/data"
+    ]
     environment:
       POSTGRES_DB: db
       POSTGRES_USER: user
@@ -74,7 +83,10 @@ services:
     image: healthcheck/postgres:alpine
     ports: ["5435:5432"]
     networks: [backing-services]
-    volumes: ["postgres-data-mx:/var/lib/postgresql/mx/data"]
+    volumes: [
+      "./init-supportcenter.sql:/docker-entrypoint-initdb.d/init-supportcenter.sql",
+      "postgres-data-mx:/var/lib/postgresql/mx/data"
+    ]
     environment:
       POSTGRES_DB: db
       POSTGRES_USER: user
@@ -85,7 +97,10 @@ services:
     image: healthcheck/postgres:alpine
     ports: ["5436:5432"]
     networks: [backing-services]
-    volumes: ["postgres-data-in:/var/lib/postgresql/in/data"]
+    volumes: [
+      "./init-supportcenter.sql:/docker-entrypoint-initdb.d/init-supportcenter.sql",
+      "postgres-data-in:/var/lib/postgresql/in/data"
+    ]
     environment:
       POSTGRES_DB: db
       POSTGRES_USER: user
