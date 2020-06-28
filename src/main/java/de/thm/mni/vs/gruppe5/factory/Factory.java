@@ -5,18 +5,14 @@ import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
 import de.thm.mni.vs.gruppe5.common.model.OrderStatus;
 import de.thm.mni.vs.gruppe5.factory.report.ReportTask;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
-import org.hibernate.criterion.Order;
 
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Timer;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class Factory {
     private final Location location;
@@ -77,7 +73,7 @@ public class Factory {
         this.emf = DatabaseUtility.getEntityManager(this.location);
 
         // Initialize publisher and subscriber
-        this.orderSubscriber = new Subscriber(Config.ORDER_QUEUE, processOrder);
+        this.orderSubscriber = new Subscriber(Config.ORDER_QUEUE, processOrderListener);
         this.finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
         this.production = new Production(emf);
         this.reportPublisher = new Publisher(Config.REPORT_QUEUE);
@@ -90,37 +86,48 @@ public class Factory {
                 + " - productionTimeFactor: " + productionTimeFactor
                 + " - maxCapacity: " + maxCapacity);
 
+        // Re-initialize previously interrupted orders
+        var em = emf.createEntityManager();
+        var query = em.createQuery("SELECT f FROM FridgeOrder f");
+        ((List<FridgeOrder>) query.getResultList())
+                .stream()
+                .filter(f -> f.getStatus() != OrderStatus.COMPLETED)
+                .forEach(this::processOrder);
+        em.close();
     }
 
-    private final MessageListener processOrder = m -> {
+    private final MessageListener processOrderListener = m -> {
         try {
             var objectMessage = (ObjectMessage) m;
             var order = (FridgeOrder) objectMessage.getObject();
-
-            System.out.println("Received order: " + order.toString());
-            if (currentOrders.size() < maxCapacity) {
-                PerformanceTracker.getInstance().receivedOrder();
-
-                if (currentOrders.size() == maxCapacity - 1) {
-                    orderSubscriber.pause();
-                }
-                DatabaseUtility.merge(emf, order);
-                production.orderParts(order)
-                        .thenCompose(o -> CompletableFuture.supplyAsync(() -> {
-                                DatabaseUtility.merge(emf, o);
-                                return o;
-                            }))
-                        .thenCompose(o -> production.produce(o, this.productionTimeFactor))
-                        .thenAccept(this::reportFinishedOrder);
-            } else {
-                // This should never happen
-                // If it does happen, current implementation of max capacity is faulty
-                throw new IllegalStateException("Max capacity reached, didn't accept order: " + order.toString());
-            }
+            processOrder(order);
         } catch (JMSException e) {
             e.printStackTrace();
         }
     };
+
+    private void processOrder(FridgeOrder order) throws IllegalStateException {
+        System.out.println("Received order: " + order.toString());
+        if (currentOrders.size() < maxCapacity) {
+            PerformanceTracker.getInstance().receivedOrder();
+
+            if (currentOrders.size() == maxCapacity - 1) {
+                orderSubscriber.pause();
+            }
+            DatabaseUtility.merge(emf, order);
+            production.orderParts(order)
+                    .thenCompose(o -> CompletableFuture.supplyAsync(() -> {
+                        DatabaseUtility.merge(emf, o);
+                        return o;
+                    }))
+                    .thenCompose(o -> production.produce(o, this.productionTimeFactor))
+                    .thenAccept(this::reportFinishedOrder);
+        } else {
+            // This should never happen
+            // If it does happen, current implementation of max capacity is faulty
+            throw new IllegalStateException("Max capacity reached, didn't accept order: " + order.toString());
+        }
+    }
 
     private void reportFinishedOrder(FridgeOrder order) {
         System.out.println("Finished order " + order.toString());
