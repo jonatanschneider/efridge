@@ -79,7 +79,7 @@ public class Factory {
         // Initialize publisher and subscriber
         this.orderSubscriber = new Subscriber(Config.ORDER_QUEUE, processOrder);
         this.finishedOrderPublisher = new Publisher(Config.FINISHED_ORDER_QUEUE);
-        this.production = new Production();
+        this.production = new Production(emf);
         this.reportPublisher = new Publisher(Config.REPORT_QUEUE);
 
         // Initialize and start report task
