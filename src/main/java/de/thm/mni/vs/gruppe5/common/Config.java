@@ -12,6 +12,7 @@ public class Config {
     public static final String ORDER_QUEUE = "orderQueue";
     public static final String TICKET_QUEUE = "ticketQueue";
     public static final String REPORT_QUEUE = "reportQueue";
+    public static final String DEAD_LETTER_QUEUE = "ActiveMQ.DLQ";
     public static final float PRODUCTION_COST_PER_SECOND = 0.5f;
     public static final long DAY_DURATION_IN_SECONDS = 60;
     public static final long REPORTS_PER_DAY = 4;
