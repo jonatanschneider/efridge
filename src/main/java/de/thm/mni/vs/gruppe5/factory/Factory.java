@@ -12,7 +12,6 @@ import javax.jms.ObjectMessage;
 import javax.persistence.EntityManagerFactory;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 public class Factory {
     private final Location location;
