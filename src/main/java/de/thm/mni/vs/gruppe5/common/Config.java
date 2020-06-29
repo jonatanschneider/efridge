@@ -9,6 +9,8 @@ public class Config {
     public static final String TICKET_URL = SERVER_URL + TICKET_PATH;
     public static final String PARTS_PATH = "/parts";
     public static final String PARTS_URL = SERVER_URL + PARTS_PATH;
+    public static final int COOL_MECHANICS_SERVER_PORT = 7100;
+    public static final int ELECTRO_STUFF_SERVER_PORT = 7200;
     public static final String FINISHED_ORDER_QUEUE = "finishedOrderQueue";
     public static final String FINISHED_TICKET_QUEUE = "finishedTicketQueue";
     public static final String ORDER_QUEUE = "orderQueue";
