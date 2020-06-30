@@ -2,6 +2,7 @@ package de.thm.mni.vs.gruppe5.factory;
 
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
+import de.thm.mni.vs.gruppe5.common.model.Part;
 import de.thm.mni.vs.gruppe5.factory.report.ReportTask;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
 
@@ -20,6 +21,7 @@ public class Factory {
     private final Publisher finishedOrderPublisher;
     private final Publisher reportPublisher;
     private Subscriber orderSubscriber;
+    private Subscriber updatePartCostSubscriber;
     private IProduction production;
     private float productionTimeFactor;
     private int maxCapacity;
@@ -79,6 +81,12 @@ public class Factory {
         this.production = new Production();
         this.reportPublisher = new Publisher(Config.REPORT_QUEUE);
 
+        if (location == Location.USA) {
+            this.updatePartCostSubscriber = new Subscriber(Config.UPDATE_PARTS_COST_TOPIC_US, updatePartCosts);
+        } else {
+            this.updatePartCostSubscriber = new Subscriber(Config.UPDATE_PARTS_COST_TOPIC_CN, updatePartCosts);
+        }
+
         // Initialize and start report task
         var reportTask = new ReportTask(reportPublisher);
         new Timer().scheduleAtFixedRate(reportTask, 0, reportTask.getPeriod());
@@ -114,6 +122,19 @@ public class Factory {
                 // If it does happen, current implementation of max capacity is faulty
                 throw new IllegalStateException("Max capacity reached, didn't accept order: " + order.toString());
             }
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
+    };
+
+    private final MessageListener updatePartCosts = m -> {
+        var objectMessage = (ObjectMessage) m;
+        try {
+            var part = (Part) objectMessage.getObject();
+
+            System.out.println("Received update costs for part: " + part);
+            DatabaseUtility.merge(emf, part);
+
         } catch (JMSException e) {
             e.printStackTrace();
         }
