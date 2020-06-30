@@ -26,6 +26,7 @@ public abstract class Supplier {
         if (!order.getProductIdWithQuantity().keySet().stream().allMatch(isAvailable)) {
             System.out.println("Some parts are not available from this supplier, cancelling");
             ctx.status(400);
+            ctx.result("There are some parts that are not available from this supplier, please check your part ids");
             return;
         }
         System.out.println("We received a order for " + order);
