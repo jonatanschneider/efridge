@@ -208,8 +208,14 @@ public class Headquarter {
                 } else if (object instanceof Part) {
                     var destination = ((ActiveMQObjectMessage) m).getOriginalDestination().getPhysicalName();
                     switch (destination) {
-                        case Config.UPDATE_PARTS_COST_TOPIC_CN -> updatePartCostPublisherCN.publish(object);
-                        case Config.UPDATE_PARTS_COST_TOPIC_US -> updatePartCostPublisherUS.publish(object);
+                        case Config.UPDATE_PARTS_COST_TOPIC_CN -> {
+                            System.out.println("Re-publish update part cost to China " + object);
+                            updatePartCostPublisherCN.publish(object);
+                        }
+                        case Config.UPDATE_PARTS_COST_TOPIC_US -> {
+                            System.out.println("Re-publish update part cost to USA " + object);
+                            updatePartCostPublisherUS.publish(object);
+                        }
                     }
                 }
             } catch (JMSException e) {
