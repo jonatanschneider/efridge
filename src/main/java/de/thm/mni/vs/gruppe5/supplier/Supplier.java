@@ -1,11 +1,13 @@
 package de.thm.mni.vs.gruppe5.supplier;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import de.thm.mni.vs.gruppe5.common.FrontendPartOrder;
-import de.thm.mni.vs.gruppe5.common.model.Part;
-import de.thm.mni.vs.gruppe5.util.TimeHelper;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import io.javalin.plugin.json.JavalinJson;
 
+import java.util.Random;
 import java.util.function.Predicate;
 
 public abstract class Supplier {
@@ -14,6 +16,9 @@ public abstract class Supplier {
     public Supplier(int port) {
         server = Javalin.create().start(port);
         server.post("/parts", this::receivePartOrder);
+        Gson gson = new GsonBuilder().create();
+        JavalinJson.setFromJsonMapper(gson::fromJson);
+        JavalinJson.setToJsonMapper(gson::toJson);
     }
 
     public void receivePartOrder(Context ctx) {
@@ -24,9 +29,13 @@ public abstract class Supplier {
             return;
         }
         System.out.println("We received a order for " + order);
-        System.out.println("Processing order...");
-        TimeHelper.waitRandom(10);
-        System.out.println("Finished processing, sending 200 OK");
+
+        var r = new Random();
+        var seconds = r.nextInt(10);
+
+        System.out.println("Received order, will be available in " + seconds +  " seconds");
+
+        ctx.result("" + seconds);
         ctx.status(200);
     }
 
