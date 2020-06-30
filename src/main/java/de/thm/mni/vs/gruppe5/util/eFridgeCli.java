@@ -29,7 +29,7 @@ public class eFridgeCli {
 
             } else {
                 do {
-                    System.out.println("Select type (order, ticket)");
+                    System.out.println("Select type (order, ticket, part)");
                     var line = scanner.nextLine().toLowerCase().trim();
                     if (line.equals("order")) {
                         item = new FrontendOrder().interactiveCreation();
@@ -37,6 +37,14 @@ public class eFridgeCli {
                     } else if (line.equals("ticket")) {
                         item = new FrontendTicket().interactiveCreation();
                         post(Config.TICKET_URL, item);
+                    } else if (line.equals("part")) {
+                        System.out.println("Enter part id");
+                        var partId = scanner.nextLine();
+                        System.out.println("Enter new costs for part");
+                        var costs = scanner.nextDouble();
+                        scanner.nextLine();
+                        post(Config.PARTS_URL + "/" + partId, costs);
+                        return;
                     }
                 } while (item == null);
             }
@@ -45,9 +53,9 @@ public class eFridgeCli {
         }
     }
 
-    private static boolean post(String url, FrontendItem item) throws IOException {
+    private static boolean post(String url, Object object) throws IOException {
         OkHttpClient client = new OkHttpClient();
-        String json = new Gson().toJson(item);
+        String json = new Gson().toJson(object);
         RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
         Request request = new Request.Builder()
                 .url(url)

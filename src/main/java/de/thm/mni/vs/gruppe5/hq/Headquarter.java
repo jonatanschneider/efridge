@@ -27,6 +27,8 @@ public class Headquarter {
     private Subscriber reportSubscriber;
     private Subscriber dlqSubscriber;
     private Publisher orderPublisher;
+    private final Publisher updatePartCostPublisherUS;
+    private final Publisher updatePartCostPublisherCN;
     private Publisher ticketPublisher;
     private EntityManagerFactory emf;
     private Javalin server;
@@ -55,6 +57,8 @@ public class Headquarter {
         this.dlqSubscriber = new Subscriber(Config.DEAD_LETTER_QUEUE, deadLetterQueueListener);
         this.orderPublisher = new Publisher(Config.ORDER_QUEUE);
         this.ticketPublisher = new Publisher(Config.TICKET_QUEUE);
+        this.updatePartCostPublisherUS = new Publisher(Config.UPDATE_PARTS_COST_TOPIC_US);
+        this.updatePartCostPublisherCN = new Publisher(Config.UPDATE_PARTS_COST_TOPIC_CN);
 
         Gson gson = new GsonBuilder().create();
         JavalinJson.setFromJsonMapper(gson::fromJson);
@@ -63,6 +67,7 @@ public class Headquarter {
         server = Javalin.create().start(Config.SERVER_PORT);
         server.post(Config.ORDER_PATH, this::createOrder);
         server.post(Config.TICKET_PATH, this::createTicket);
+        server.post(Config.PARTS_PATH + "/:id", this::updatePart);
         server.get(Config.TICKET_PATH + "/:id", this::getTicket);
     }
 
@@ -101,6 +106,21 @@ public class Headquarter {
         System.out.println("Send ticket to support centers: " + ticket.toString());
         ticketPublisher.publish(ticket);
         ctx.status(201);
+    }
+
+    private void updatePart(Context ctx) throws JMSException {
+        var em = emf.createEntityManager();
+        var part = em.find(Part.class, ctx.pathParam("id"));
+        var cost = ctx.bodyAsClass(double.class);
+        em.close();
+        part.setCost(cost);
+
+        DatabaseUtility.merge(emf, part);
+
+        System.out.println("Publish update part cost to USA " + part);
+        this.updatePartCostPublisherUS.publish(part);
+        System.out.println("Publish update part cost to China " + part);
+        this.updatePartCostPublisherCN.publish(part);
     }
 
     private FridgeOrder buildFridgeOrder(FrontendOrder frontendOrder) {
