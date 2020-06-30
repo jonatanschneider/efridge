@@ -8,6 +8,7 @@ import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.json.JavalinJson;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
+import org.apache.activemq.command.ActiveMQObjectMessage;
 
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
@@ -27,8 +28,8 @@ public class Headquarter {
     private Subscriber reportSubscriber;
     private Subscriber dlqSubscriber;
     private Publisher orderPublisher;
-    private final Publisher updatePartCostPublisherUS;
-    private final Publisher updatePartCostPublisherCN;
+    private Publisher updatePartCostPublisherUS;
+    private Publisher updatePartCostPublisherCN;
     private Publisher ticketPublisher;
     private EntityManagerFactory emf;
     private Javalin server;
@@ -204,6 +205,12 @@ public class Headquarter {
                 } else if (object instanceof SupportTicket && !((SupportTicket) object).isClosed()) {
                     System.out.println("Re-sending ticket to support centers: " + object);
                     ticketPublisher.publish(object);
+                } else if (object instanceof Part) {
+                    var destination = ((ActiveMQObjectMessage) m).getOriginalDestination().getPhysicalName();
+                    switch (destination) {
+                        case Config.UPDATE_PARTS_COST_TOPIC_CN -> updatePartCostPublisherCN.publish(object);
+                        case Config.UPDATE_PARTS_COST_TOPIC_US -> updatePartCostPublisherUS.publish(object);
+                    }
                 }
             } catch (JMSException e) {
                 e.printStackTrace();
