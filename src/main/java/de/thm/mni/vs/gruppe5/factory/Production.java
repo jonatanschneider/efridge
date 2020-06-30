@@ -45,8 +45,15 @@ public class Production implements IProduction {
                 mechanicPartsWaitingTime = orderParts(Supplier.CoolMechanics, mechanicParts);
                 electricPartsWaitingTime = orderParts(Supplier.ElectroStuff, electricParts);
             } catch (IOException ex) {
+                // If this happens, the supplier server send an invalid response, we can't do anything about that
+                ex.printStackTrace();
+            } catch (RuntimeException ex) {
+                // This means our database is corrupt because either the part ids are incorrect or the ids are
+                // mapped to the wrong supplier
                 ex.printStackTrace();
             }
+
+            // TODO error handling?
 
             TimeHelper.waitTime(Math.max(mechanicPartsWaitingTime, electricPartsWaitingTime));
 
@@ -65,7 +72,12 @@ public class Production implements IProduction {
                 .post(body)
                 .build();
         Response response = client.newCall(request).execute();
-        return Integer.parseInt(response.body().string());
+
+        if (response.code() == 200) {
+            return Integer.parseInt(response.body().string());
+        }
+
+        throw new RuntimeException("Invalid response from the server: Supplier can't provide all requested parts");
     }
 
     @Override
