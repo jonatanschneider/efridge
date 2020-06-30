@@ -246,6 +246,14 @@ public class Headquarter {
             if (dlqSubscriber != null) {
                 dlqSubscriber.close();
             }
+
+            if (updatePartCostPublisherCN != null) {
+                updatePartCostPublisherCN.close();
+            }
+
+            if (updatePartCostPublisherUS != null) {
+                updatePartCostPublisherUS.close();
+            }
         });
     }
 }
