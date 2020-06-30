@@ -2,15 +2,12 @@ package de.thm.mni.vs.gruppe5.factory;
 
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
-import de.thm.mni.vs.gruppe5.common.model.OrderStatus;
 import de.thm.mni.vs.gruppe5.factory.report.ReportTask;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
-import org.hibernate.criterion.Order;
 
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,17 +1,18 @@
 package de.thm.mni.vs.gruppe5.common;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class FrontendPartOrder {
     private String id = UUID.randomUUID().toString();
 
-    private HashMap<String, Integer> productIdWithQuantity;
+    private Map<String, Integer> productIdWithQuantity;
 
     public FrontendPartOrder() {
     }
 
-    public FrontendPartOrder(HashMap<String, Integer> productIdWithQuantity) {
+    public FrontendPartOrder(Map<String, Integer> productIdWithQuantity) {
         this.productIdWithQuantity = productIdWithQuantity;
     }
 
@@ -19,11 +20,11 @@ public class FrontendPartOrder {
         return id;
     }
 
-    public HashMap<String, Integer> getProductIdWithQuantity() {
+    public Map<String, Integer> getProductIdWithQuantity() {
         return productIdWithQuantity;
     }
 
-    public void setProductIdWithQuantity(HashMap<String, Integer> productIdWithQuantity) {
+    public void setProductIdWithQuantity(Map<String, Integer> productIdWithQuantity) {
         this.productIdWithQuantity = productIdWithQuantity;
     }
 
