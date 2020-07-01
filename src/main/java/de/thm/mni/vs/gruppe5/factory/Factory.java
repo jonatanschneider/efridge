@@ -150,6 +150,7 @@ public class Factory {
     };
 
     private void reportFinishedOrder(FridgeOrder order) {
+        if (order.getStatus() != OrderStatus.COMPLETED) return;
         System.out.println("Finished order " + order.toString());
         try {
             DatabaseUtility.merge(emf, order);

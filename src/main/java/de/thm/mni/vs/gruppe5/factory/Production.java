@@ -90,6 +90,10 @@ public class Production implements IProduction {
     @Override
     public CompletableFuture<FridgeOrder> produce(FridgeOrder order, float factoryTimeFactor) {
         return CompletableFuture.supplyAsync(() -> {
+            if (!order.isPartsOrdered()) {
+                // parts weren't ordered, so we can't produce
+                return order;
+            }
             System.out.println("Producing order " + order.getId());
 
             order.getOrderItems().forEach(orderItem -> {
