@@ -149,7 +149,7 @@ public class Headquarter {
             try {
                 var object = ((ObjectMessage) m).getObject();
                 if (object instanceof FridgeOrder) {
-                    System.out.println("Received finished order" + object);
+                    System.out.println("Received finished order: " + object);
                     DatabaseUtility.merge(emf, object);
                 }
             } catch (JMSException e) {
@@ -165,11 +165,11 @@ public class Headquarter {
                 if (object instanceof SupportTicket) {
                     var ticket = (SupportTicket) object;
                     if (!ticket.isClosed()) {
-                        System.out.println("Received unfinished ticket" + object);
+                        System.out.println("Received unfinished ticket: " + object);
                         System.out.println("Sending back to SupportCenter");
                         ticketPublisher.publish(ticket);
                     } else {
-                        System.out.println("Received finished ticket" + object);
+                        System.out.println("Received finished ticket: " + object);
                         ((SupportTicket) object).setClosingTime(new Date(System.currentTimeMillis()));
                         DatabaseUtility.merge(emf, object);
                     }

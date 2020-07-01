@@ -18,8 +18,8 @@ public class Factory {
     private final Location location;
     private final Publisher finishedOrderPublisher;
     private final Publisher reportPublisher;
+    private final Subscriber updatePartCostSubscriber;
     private Subscriber orderSubscriber;
-    private Subscriber updatePartCostSubscriber;
     private IProduction production;
     private float productionTimeFactor;
     private int maxCapacity;
@@ -173,6 +173,9 @@ public class Factory {
             }
             if (orderSubscriber != null) {
                 orderSubscriber.close();
+            }
+            if (updatePartCostSubscriber != null) {
+                updatePartCostSubscriber.close();
             }
             if (emf != null) {
                 emf.close();
