@@ -27,17 +27,6 @@ public class Production implements IProduction {
 
     public CompletableFuture<FridgeOrder> orderParts(FridgeOrder order) {
         return CompletableFuture.supplyAsync(() -> {
-
-            if (!order.hasInit()) {
-                order.initRandom(10);
-                DatabaseUtility.merge(emf, order);
-            }
-            try {
-                order.complete();
-            } catch (InterruptedException e) {
-                System.out.println("Manually interrupting waiting time");
-            }
-
             int mechanicPartsWaitingTime = 0;
             int electricPartsWaitingTime = 0;
             var mechanicParts = new HashMap<String, Integer>();
@@ -64,6 +53,17 @@ public class Production implements IProduction {
                 // This means our database is corrupt because either the part ids are incorrect or the ids are
                 // mapped to the wrong supplier
                 ex.printStackTrace();
+            }
+
+            // TODO error handling?
+            if (!order.hasInit()) {
+                order.initRandom(10);
+                DatabaseUtility.merge(emf, order);
+            }
+            try {
+                order.complete();
+            } catch (InterruptedException e) {
+                System.out.println("Manually interrupting waiting time");
             }
             
             order.setPartsOrdered(true);
