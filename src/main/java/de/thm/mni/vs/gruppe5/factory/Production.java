@@ -27,39 +27,36 @@ public class Production implements IProduction {
 
     public CompletableFuture<FridgeOrder> orderParts(FridgeOrder order) {
         return CompletableFuture.supplyAsync(() -> {
-            int mechanicPartsWaitingTime = 0;
-            int electricPartsWaitingTime = 0;
             var mechanicParts = new HashMap<String, Integer>();
             var electricParts = new HashMap<String, Integer>();
 
-            for (var orderItem : order.getOrderItems()) {
-                var quantity = orderItem.getQuantity();
-                for (var productPart : orderItem.getProduct().getProductParts()) {
-                    if (productPart.getPart().getSupplier() == Supplier.CoolMechanics) {
-                        mechanicParts.put(productPart.getPart().getId(), productPart.getQuantity() * quantity);
-                    } else {
-                        electricParts.put(productPart.getPart().getId(), productPart.getQuantity() * quantity);
+            if (!order.hasInit()) {
+                for (var orderItem : order.getOrderItems()) {
+                    var quantity = orderItem.getQuantity();
+                    for (var productPart : orderItem.getProduct().getProductParts()) {
+                        if (productPart.getPart().getSupplier() == Supplier.CoolMechanics) {
+                            mechanicParts.put(productPart.getPart().getId(), productPart.getQuantity() * quantity);
+                        } else {
+                            electricParts.put(productPart.getPart().getId(), productPart.getQuantity() * quantity);
+                        }
                     }
+                }
+
+                try {
+                    var waitingTime = Math.max(orderParts(Supplier.CoolMechanics, mechanicParts), orderParts(Supplier.ElectroStuff, electricParts));
+                    System.out.println("Waiting time for " + order + " ");
+                    order.init(waitingTime);
+                    DatabaseUtility.merge(emf, order);
+                } catch (IOException ex) {
+                    // If this happens, the supplier server send an invalid response, we can't do anything about that
+                    ex.printStackTrace();
+                } catch (RuntimeException ex) {
+                    // This means our database is corrupt because either the part ids are incorrect or the ids are
+                    // mapped to the wrong supplier
+                    ex.printStackTrace();
                 }
             }
 
-            try {
-                mechanicPartsWaitingTime = orderParts(Supplier.CoolMechanics, mechanicParts);
-                electricPartsWaitingTime = orderParts(Supplier.ElectroStuff, electricParts);
-            } catch (IOException ex) {
-                // If this happens, the supplier server send an invalid response, we can't do anything about that
-                ex.printStackTrace();
-            } catch (RuntimeException ex) {
-                // This means our database is corrupt because either the part ids are incorrect or the ids are
-                // mapped to the wrong supplier
-                ex.printStackTrace();
-            }
-
-            // TODO error handling?
-            if (!order.hasInit()) {
-                order.initRandom(10);
-                DatabaseUtility.merge(emf, order);
-            }
             try {
                 order.complete();
             } catch (InterruptedException e) {

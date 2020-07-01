@@ -2,6 +2,7 @@ package de.thm.mni.vs.gruppe5.factory;
 
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
+import de.thm.mni.vs.gruppe5.common.model.OrderStatus;
 import de.thm.mni.vs.gruppe5.common.model.Part;
 import de.thm.mni.vs.gruppe5.factory.report.ReportTask;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
