@@ -1,6 +1,5 @@
 package de.thm.mni.vs.gruppe5.common;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
