@@ -16,6 +16,7 @@ public class FrontendTicket implements FrontendItem {
 
     /**
      * Validate tickets
+     *
      * @return whether or not a ticket is valid
      */
     @Override
@@ -26,6 +27,7 @@ public class FrontendTicket implements FrontendItem {
 
     /**
      * Allows interactive creation of a new ticket via console
+     *
      * @return open ticket with user-defined texts and current date as opening date
      */
     @Override
