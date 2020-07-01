@@ -1,5 +1,6 @@
 package de.thm.mni.vs.gruppe5.hq.controller;
 
+import de.thm.mni.vs.gruppe5.common.Config;
 import de.thm.mni.vs.gruppe5.common.FrontendOrder;
 import de.thm.mni.vs.gruppe5.common.Publisher;
 import de.thm.mni.vs.gruppe5.common.model.*;
@@ -54,8 +55,15 @@ public class OrderController {
 
     public void getOrders(Context ctx) {
         EntityManager em = emf.createEntityManager();
-        TypedQuery<FridgeOrder> query =
-                em.createQuery("SELECT fo FROM FridgeOrder fo", FridgeOrder.class);
+        String customerId = ctx.queryParam(Config.CUSTOMER_ID_PARAM);
+        TypedQuery<FridgeOrder> query;
+
+        if (customerId != null) {
+            query = em.createQuery("SELECT fo FROM FridgeOrder fo WHERE fo.customerId = :customerId", FridgeOrder.class);
+            query.setParameter("customerId", customerId);
+        } else {
+            query = em.createQuery("SELECT fo FROM FridgeOrder fo", FridgeOrder.class);
+        }
         ctx.json(query.getResultList());
         em.close();
     }
