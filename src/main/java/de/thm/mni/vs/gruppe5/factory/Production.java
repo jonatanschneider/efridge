@@ -1,35 +1,38 @@
 package de.thm.mni.vs.gruppe5.factory;
 
 import de.thm.mni.vs.gruppe5.common.PerformanceTracker;
-import de.thm.mni.vs.gruppe5.util.TimeHelper;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
 import de.thm.mni.vs.gruppe5.common.model.OrderStatus;
+import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
 
+import javax.persistence.EntityManagerFactory;
 import java.util.concurrent.CompletableFuture;
 
 
 public class Production implements IProduction {
     private PerformanceTracker performanceTracker;
+    private EntityManagerFactory emf;
 
-    public Production() {
+    public Production(EntityManagerFactory emf) {
+        this.emf = emf;
         performanceTracker = PerformanceTracker.getInstance();
     }
 
     @Override
     public CompletableFuture<FridgeOrder> orderParts(FridgeOrder order) {
         return CompletableFuture.supplyAsync(() -> {
-
-            /* Wait for all suppliers where we need to order items for this FridgeOrder */
-            order.getOrderItems().stream()
-                    .flatMap(orderItem -> orderItem.getProduct().getProductParts().stream())
-                    .map(productPart -> productPart.getPart().getSupplier())
-                    .distinct()
-                    .forEach(x -> {
-                        System.out.println("Ordering from " + x.name());
-                        TimeHelper.waitRandom(10);
-                    });
+            if (!order.hasInit()) {
+                order.initRandom(10);
+                DatabaseUtility.merge(emf, order);
+            }
+            try {
+                order.complete();
+            } catch (InterruptedException e) {
+                System.out.println("Manually interrupting waiting time");
+            }
 
             order.setPartsOrdered(true);
+            DatabaseUtility.merge(emf, order);
             return order;
         });
     }
@@ -41,10 +44,17 @@ public class Production implements IProduction {
 
             order.getOrderItems().forEach(orderItem -> {
                 var product = orderItem.getProduct();
-                var time = (long) (product.getProductionTime() * orderItem.getQuantity() * factoryTimeFactor);
+                var time = Math.round(product.getProductionTime() * orderItem.getQuantity() * factoryTimeFactor);
                 System.out.println("Producing '" + product.getName() + "' (" + orderItem.getQuantity() + "x): " + time + " seconds");
-                TimeHelper.waitTime(time);
-
+                if (!orderItem.hasInit()) {
+                    orderItem.init(time);
+                    DatabaseUtility.merge(emf, orderItem);
+                }
+                try {
+                    orderItem.complete();
+                } catch (InterruptedException e) {
+                    System.out.println("Manually interrupting waiting time");
+                }
                 performanceTracker.finishedOrderItem(orderItem, time);
             });
 

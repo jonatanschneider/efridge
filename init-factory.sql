@@ -1,7 +1,7 @@
 create sequence hibernate_sequence start 1 increment 1;
-create table FridgeOrder (id varchar(255) not null, customerId varchar(255), partsOrdered boolean not null, status int4, primary key (id));
+create table FridgeOrder (id varchar(255) not null, customerId varchar(255), partsOrdered boolean not null, status int4, completedAt timestamp, primary key (id));
 create table FridgeOrder_OrderItem (FridgeOrder_id varchar(255) not null, orderItems_id varchar(255) not null, primary key (FridgeOrder_id, orderItems_id));
-create table OrderItem (id varchar(255) not null, quantity int4 not null, product_id int4, primary key (id));
+create table OrderItem (id varchar(255) not null, quantity int4 not null, product_id int4, completedAt timestamp, primary key (id));
 create table Part (id varchar(255) not null, cost float8 not null, supplier int4, primary key (id));
 create table Product (id int4 not null, name varchar(255), productionTime int4 not null, primary key (id));
 create table Product_ProductPart (Product_id int4 not null, productParts_id varchar(255) not null, primary key (Product_id, productParts_id));

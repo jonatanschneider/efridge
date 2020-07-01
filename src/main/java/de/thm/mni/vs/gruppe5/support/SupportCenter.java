@@ -52,33 +52,45 @@ public class SupportCenter {
         this.location = location;
         this.agents = agents;
         this.currentTickets = Collections.synchronizedList(new ArrayList<>(agents));
-        ticketSubscriber = new Subscriber(Config.TICKET_QUEUE, processTicket);
+        ticketSubscriber = new Subscriber(Config.TICKET_QUEUE, processTicketListener);
         finishedTicketPublisher = new Publisher(Config.FINISHED_TICKET_QUEUE);
         agent = new Agent();
+
+        // Re-initialize previously interrupted tickets
+        var em = emf.createEntityManager();
+        var query = em.createQuery("SELECT t FROM SupportTicket t");
+        ((List<SupportTicket>) query.getResultList())
+                .stream()
+                .filter(t -> !t.isClosed())
+                .forEach(this::processTicket);
+        em.close();
     }
 
-    private final MessageListener processTicket = m -> {
+    private final MessageListener processTicketListener = m -> {
         try {
             var objectMessage = (ObjectMessage) m;
             var ticket = (SupportTicket) objectMessage.getObject();
-
-            System.out.println("Received ticket: " + ticket.toString());
-            DatabaseUtility.merge(emf, ticket);
-            if (currentTickets.size() < agents) {
-                if (currentTickets.size() == agents - 1) {
-                    ticketSubscriber.pause();
-                }
-                currentTickets.add(ticket);
-                agent.handleTicket(ticket).thenAccept(this::reportFinishedTicket);
-            } else {
-                // This should never happen
-                // If it does happen, current implementation of max capacity is faulty
-                throw new IllegalStateException("Max capacity reached, didn't accept order: " + ticket.toString());
-            }
+            processTicket(ticket);
         } catch (JMSException e) {
             e.printStackTrace();
         }
     };
+
+    private void processTicket(SupportTicket ticket) {
+        System.out.println("Received ticket: " + ticket.toString());
+        DatabaseUtility.merge(emf, ticket);
+        if (currentTickets.size() < agents) {
+            if (currentTickets.size() == agents - 1) {
+                ticketSubscriber.pause();
+            }
+            currentTickets.add(ticket);
+            agent.handleTicket(ticket).thenAccept(this::reportFinishedTicket);
+        } else {
+            // This should never happen
+            // If it does happen, current implementation of max capacity is faulty
+            throw new IllegalStateException("Max capacity reached, didn't accept ticket: " + ticket.toString());
+        }
+    }
 
     private void reportFinishedTicket(SupportTicket ticket) {
         System.out.println("Finished ticket " + ticket.toString());

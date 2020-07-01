@@ -4,9 +4,11 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Date;
+import java.util.Random;
 
 @Entity
-public class OrderItem implements Serializable {
+public class OrderItem implements Serializable, Completable {
     @Id @GeneratedValue(generator="system-uuid")
     @GenericGenerator(name="system-uuid", strategy = "uuid")
     private String id;
@@ -15,6 +17,9 @@ public class OrderItem implements Serializable {
     private Product product;
 
     private int quantity;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date completedAt;
 
 
     public OrderItem() {
@@ -52,5 +57,26 @@ public class OrderItem implements Serializable {
                 ", product=" + product +
                 ", quantity=" + quantity +
                 '}';
+    }
+
+    @Override
+    public void init(int seconds) {
+        completedAt = new Date(System.currentTimeMillis() + seconds * 1000);
+    }
+
+    @Override
+    public void initRandom(int seconds) {
+        init(new Random().nextInt(seconds) + 1);
+    }
+
+    @Override
+    public boolean hasInit() {
+        return completedAt != null;
+    }
+
+    @Override
+    public void complete() throws InterruptedException {
+        while (completedAt.after(new Date(System.currentTimeMillis())))
+            Thread.sleep(1000);
     }
 }

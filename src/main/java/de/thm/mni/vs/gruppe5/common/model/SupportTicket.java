@@ -3,10 +3,11 @@ package de.thm.mni.vs.gruppe5.common.model;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Random;
 import java.util.UUID;
 
 @Entity
-public class SupportTicket implements Serializable {
+public class SupportTicket implements Serializable, Completable {
     @Id
     private String id = UUID.randomUUID().toString();
 
@@ -19,6 +20,9 @@ public class SupportTicket implements Serializable {
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date closingTime;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date completedAt;
 
     // Use length of 5000 characters, as jpa doesnt allow to simply set the number to the maximum
     @Column(length = 5000)
@@ -94,5 +98,26 @@ public class SupportTicket implements Serializable {
                 ", closingTime=" + closingTime +
                 ", text='" + text + '\'' +
                 '}';
+    }
+
+    @Override
+    public void init(int seconds) {
+        completedAt = new Date(System.currentTimeMillis() + seconds * 1000);
+    }
+
+    @Override
+    public void initRandom(int seconds) {
+        init(new Random().nextInt(seconds) + 1);
+    }
+
+    @Override
+    public boolean hasInit() {
+        return completedAt != null;
+    }
+
+    @Override
+    public void complete() throws InterruptedException {
+        while (completedAt.after(new Date(System.currentTimeMillis())))
+            Thread.sleep(1000);
     }
 }

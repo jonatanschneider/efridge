@@ -8,6 +8,7 @@ import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.json.JavalinJson;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
+import org.apache.activemq.command.ActiveMQObjectMessage;
 
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
@@ -24,21 +25,22 @@ public class Headquarter {
     private final List<Product> products;
     private final Subscriber finishedOrdersSubscriber;
     private final Subscriber finishedTicketsSubscriber;
-    private final Subscriber reportSubscriber;
-    private final Publisher orderPublisher;
-    private final Publisher updatePartCostPublisherUS;
-    private final Publisher updatePartCostPublisherCN;
+    private Subscriber reportSubscriber;
+    private Subscriber dlqSubscriber;
+    private Publisher orderPublisher;
+    private Publisher updatePartCostPublisherUS;
+    private Publisher updatePartCostPublisherCN;
     private Publisher ticketPublisher;
     private EntityManagerFactory emf;
     private Javalin server;
 
     public static void main(String[] args) {
-       try {
-           var hq = new Headquarter();
-           Runtime.getRuntime().addShutdownHook(hq.closeResources());
-       } catch (Exception e) {
-           e.printStackTrace();
-       }
+        try {
+            var hq = new Headquarter();
+            Runtime.getRuntime().addShutdownHook(hq.closeResources());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private Headquarter() throws JMSException {
@@ -53,6 +55,7 @@ public class Headquarter {
         this.finishedOrdersSubscriber = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
         this.finishedTicketsSubscriber = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
         this.reportSubscriber = new Subscriber(Config.REPORT_QUEUE, incomingReportListener);
+        this.dlqSubscriber = new Subscriber(Config.DEAD_LETTER_QUEUE, deadLetterQueueListener);
         this.orderPublisher = new Publisher(Config.ORDER_QUEUE);
         this.ticketPublisher = new Publisher(Config.TICKET_QUEUE);
         this.updatePartCostPublisherUS = new Publisher(Config.UPDATE_PARTS_COST_TOPIC_US);
@@ -192,6 +195,35 @@ public class Headquarter {
         }
     };
 
+    private final MessageListener deadLetterQueueListener = m -> {
+        if (m instanceof ObjectMessage) {
+            try {
+                var object = ((ObjectMessage) m).getObject();
+                if (object instanceof FridgeOrder && ((FridgeOrder) object).getStatus() != OrderStatus.COMPLETED) {
+                    System.out.println("Re-sending order to factories: " + object);
+                    orderPublisher.publish(object);
+                } else if (object instanceof SupportTicket && !((SupportTicket) object).isClosed()) {
+                    System.out.println("Re-sending ticket to support centers: " + object);
+                    ticketPublisher.publish(object);
+                } else if (object instanceof Part) {
+                    var destination = ((ActiveMQObjectMessage) m).getOriginalDestination().getPhysicalName();
+                    switch (destination) {
+                        case Config.UPDATE_PARTS_COST_TOPIC_CN -> {
+                            System.out.println("Re-publish update part cost to China " + object);
+                            updatePartCostPublisherCN.publish(object);
+                        }
+                        case Config.UPDATE_PARTS_COST_TOPIC_US -> {
+                            System.out.println("Re-publish update part cost to USA " + object);
+                            updatePartCostPublisherUS.publish(object);
+                        }
+                    }
+                }
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
     private Thread closeResources() {
         return new Thread(() -> {
             System.out.println("Shutdown headquarter");
@@ -215,6 +247,18 @@ public class Headquarter {
 
             if (reportSubscriber != null) {
                 reportSubscriber.close();
+            }
+
+            if (dlqSubscriber != null) {
+                dlqSubscriber.close();
+            }
+
+            if (updatePartCostPublisherCN != null) {
+                updatePartCostPublisherCN.close();
+            }
+
+            if (updatePartCostPublisherUS != null) {
+                updatePartCostPublisherUS.close();
             }
         });
     }
