@@ -10,6 +10,7 @@ import okhttp3.*;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Logic for ordering parts from a specified supplier
@@ -63,7 +64,11 @@ public class PartProcurement {
      * @throws RuntimeException the supplier can't provide the requested parts; this happens if you order from the wrong supplier
      */
     private int getWaitingTime(Map<String, Integer> productIdsWithQuantity) throws IOException {
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(2, TimeUnit.SECONDS)
+                .writeTimeout(1, TimeUnit.SECONDS)
+                .readTimeout(1, TimeUnit.SECONDS)
+                .build();
 
         // Build the JSON-request
         var partOrder = new FrontendPartOrder(productIdsWithQuantity);

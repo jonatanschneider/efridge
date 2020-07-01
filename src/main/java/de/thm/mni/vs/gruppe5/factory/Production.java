@@ -29,7 +29,7 @@ public class Production implements IProduction {
                             new PartProcurement(Supplier.CoolMechanics).orderPartsFor(order),
                             new PartProcurement(Supplier.ElectroStuff).orderPartsFor(order));
 
-                    System.out.println("Waiting time for " + order + " ");
+                    System.out.println("Waiting time for " + order.getId() + " is " + waitingTime + " seconds");
                     order.init(waitingTime);
                     DatabaseUtility.merge(emf, order);
                 } catch (IOException ex) {
