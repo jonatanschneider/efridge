@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.*;
+import de.thm.mni.vs.gruppe5.hq.controller.OrderController;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.json.JavalinJson;
@@ -20,7 +21,6 @@ import java.util.List;
 
 public class Headquarter {
     private final static Location location = Location.HEADQUARTER;
-    private final List<Product> products;
     private final Subscriber finishedOrdersSubscriber;
     private final Subscriber finishedTicketsSubscriber;
     private Subscriber reportSubscriber;
@@ -44,12 +44,6 @@ public class Headquarter {
     private Headquarter() throws JMSException {
         this.emf = DatabaseUtility.getEntityManager(location);
 
-        var em = emf.createEntityManager();
-        Query query = em.createQuery("SELECT p FROM Product p");
-        this.products = query.getResultList();
-        this.products.sort(Comparator.comparing(Product::getId));
-        em.close();
-
         this.finishedOrdersSubscriber = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
         this.finishedTicketsSubscriber = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
         this.reportSubscriber = new Subscriber(Config.REPORT_QUEUE, incomingReportListener);
@@ -63,28 +57,14 @@ public class Headquarter {
         JavalinJson.setFromJsonMapper(gson::fromJson);
         JavalinJson.setToJsonMapper(gson::toJson);
 
+        OrderController orderController = new OrderController(emf, orderPublisher);
+
         server = Javalin.create().start(Config.SERVER_PORT);
-        server.post(Config.ORDER_PATH, this::createOrder);
+        server.post(Config.ORDER_PATH, orderController::createOrder);
         server.post(Config.TICKET_PATH, this::createTicket);
         server.post(Config.PARTS_PATH + "/:id", this::updatePart);
         server.get(Config.TICKET_PATH + "/:id", this::getTicket);
         server.get(Config.PERFORMANCE_PATH, this::getPerformance);
-    }
-
-    private void createOrder(Context ctx) throws JMSException {
-        var frontendOrder = ctx.bodyAsClass(FrontendOrder.class);
-
-        if (!frontendOrder.isValid()) {
-            System.out.println("Discarding invalid order " + frontendOrder);
-            ctx.status(400);
-            return;
-        }
-
-        var order = buildFridgeOrder(frontendOrder);
-        DatabaseUtility.persist(emf, order);
-        System.out.println("Send order to factories: " + order.toString());
-        orderPublisher.publish(order);
-        ctx.status(201);
     }
 
     private void getTicket(Context ctx) {
@@ -132,15 +112,7 @@ public class Headquarter {
         em.close();
     }
 
-    private FridgeOrder buildFridgeOrder(FrontendOrder frontendOrder) {
-        var order = new FridgeOrder();
-        order.setCustomerId(frontendOrder.customerId);
-        frontendOrder.getOrderProductIdsWithQuantity().entrySet().stream()
-                .map(entry -> new OrderItem(products.get(entry.getKey() - 1), entry.getValue()))
-                .forEach(order.getOrderItems()::add);
-        order.setStatus(OrderStatus.RECEIVED);
-        return order;
-    }
+
 
     private SupportTicket buildSupportTicket(FrontendTicket frontendTicket) {
         var ticket = new SupportTicket();
