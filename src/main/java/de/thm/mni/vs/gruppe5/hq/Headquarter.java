@@ -13,9 +13,7 @@ import org.apache.activemq.command.ActiveMQObjectMessage;
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Query;
+import javax.persistence.*;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -70,6 +68,7 @@ public class Headquarter {
         server.post(Config.TICKET_PATH, this::createTicket);
         server.post(Config.PARTS_PATH + "/:id", this::updatePart);
         server.get(Config.TICKET_PATH + "/:id", this::getTicket);
+        server.get(Config.PERFORMANCE_PATH, this::getPerformance);
     }
 
     private void createOrder(Context ctx) throws JMSException {
@@ -91,6 +90,7 @@ public class Headquarter {
     private void getTicket(Context ctx) {
         EntityManager em = emf.createEntityManager();
         ctx.json(em.find(SupportTicket.class, ctx.pathParam("id")));
+        em.close();
     }
 
     private void createTicket(Context ctx) throws JMSException {
@@ -122,6 +122,14 @@ public class Headquarter {
         this.updatePartCostPublisherUS.publish(part);
         System.out.println("Publish update part cost to China " + part);
         this.updatePartCostPublisherCN.publish(part);
+    }
+
+    private void getPerformance(Context ctx) {
+        EntityManager em = emf.createEntityManager();
+        TypedQuery<Performance> query =
+                em.createQuery("SELECT p FROM Performance p", Performance.class);
+        ctx.json(query.getResultList());
+        em.close();
     }
 
     private FridgeOrder buildFridgeOrder(FrontendOrder frontendOrder) {

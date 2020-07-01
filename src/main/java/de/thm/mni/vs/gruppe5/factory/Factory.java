@@ -86,7 +86,7 @@ public class Factory {
         }
 
         // Initialize and start report task
-        var reportTask = new ReportTask(reportPublisher);
+        var reportTask = new ReportTask(location, reportPublisher);
         new Timer().scheduleAtFixedRate(reportTask, 0, reportTask.getPeriod());
 
         System.out.println("Factory - " + location.name()

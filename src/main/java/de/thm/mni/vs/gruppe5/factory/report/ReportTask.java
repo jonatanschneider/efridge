@@ -1,18 +1,22 @@
 package de.thm.mni.vs.gruppe5.factory.report;
 
 import de.thm.mni.vs.gruppe5.common.Config;
+import de.thm.mni.vs.gruppe5.common.Location;
 import de.thm.mni.vs.gruppe5.common.PerformanceTracker;
 import de.thm.mni.vs.gruppe5.common.Publisher;
+import de.thm.mni.vs.gruppe5.common.model.Performance;
 
 import javax.jms.JMSException;
 import java.util.TimerTask;
 
 public class ReportTask extends TimerTask {
     private int reportCount;
+    private final Location location;
     private final Publisher publisher;
 
-    public ReportTask(Publisher publisher) {
+    public ReportTask(Location location, Publisher publisher) {
         this.reportCount = 0;
+        this.location = location;
         this.publisher = publisher;
     }
 
@@ -24,7 +28,9 @@ public class ReportTask extends TimerTask {
         reportCount++;
 
         try {
-            publisher.publish(performanceTracker.getPerformance());
+            Performance performance = performanceTracker.getPerformance();
+            performance.setLocation(location);
+            publisher.publish(performance);
         } catch (JMSException e) {
             e.printStackTrace();
         }

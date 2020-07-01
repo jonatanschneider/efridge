@@ -1,5 +1,6 @@
 package de.thm.mni.vs.gruppe5.common.model;
 
+import de.thm.mni.vs.gruppe5.common.Location;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Entity;
@@ -18,6 +19,8 @@ public class Performance implements Serializable {
     private int producedProductsCount;
 
     private float producedProductsCost;
+
+    private Location location;
 
     public Performance() {
 
@@ -57,6 +60,14 @@ public class Performance implements Serializable {
         this.producedProductsCost += producedProductsCost;
     }
 
+    public Location getLocation() {
+        return location;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
+    }
+
     @Override
     public String toString() {
         return "Performance{" +
@@ -64,6 +75,7 @@ public class Performance implements Serializable {
                 ", orderCount=" + orderCount +
                 ", producedProductsCount=" + producedProductsCount +
                 ", producedProductsCost=" + producedProductsCost +
+                ", location=" + location +
                 '}';
     }
 }
