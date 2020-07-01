@@ -2,16 +2,15 @@ package de.thm.mni.vs.gruppe5.hq.controller;
 
 import de.thm.mni.vs.gruppe5.common.FrontendOrder;
 import de.thm.mni.vs.gruppe5.common.Publisher;
-import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
-import de.thm.mni.vs.gruppe5.common.model.OrderItem;
-import de.thm.mni.vs.gruppe5.common.model.OrderStatus;
-import de.thm.mni.vs.gruppe5.common.model.Product;
+import de.thm.mni.vs.gruppe5.common.model.*;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
 import io.javalin.http.Context;
 
 import javax.jms.JMSException;
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import java.util.Comparator;
 import java.util.List;
 
@@ -45,6 +44,20 @@ public class OrderController {
         System.out.println("Send order to factories: " + order.toString());
         publisher.publish(order);
         ctx.status(201);
+    }
+
+    public void getOrder(Context ctx) {
+        EntityManager em = emf.createEntityManager();
+        ctx.json(em.find(FridgeOrder.class, ctx.pathParam("id")));
+        em.close();
+    }
+
+    public void getOrders(Context ctx) {
+        EntityManager em = emf.createEntityManager();
+        TypedQuery<FridgeOrder> query =
+                em.createQuery("SELECT fo FROM FridgeOrder fo", FridgeOrder.class);
+        ctx.json(query.getResultList());
+        em.close();
     }
 
     private FridgeOrder buildFridgeOrder(FrontendOrder frontendOrder) {

@@ -61,6 +61,8 @@ public class Headquarter {
 
         server = Javalin.create().start(Config.SERVER_PORT);
         server.post(Config.ORDER_PATH, orderController::createOrder);
+        server.get(Config.ORDER_PATH, orderController::getOrders);
+        server.get(Config.ORDER_PATH  + "/:id", orderController::getOrder);
         server.post(Config.TICKET_PATH, this::createTicket);
         server.post(Config.PARTS_PATH + "/:id", this::updatePart);
         server.get(Config.TICKET_PATH + "/:id", this::getTicket);
