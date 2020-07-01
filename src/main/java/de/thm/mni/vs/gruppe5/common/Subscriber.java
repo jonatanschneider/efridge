@@ -17,7 +17,7 @@ public class Subscriber implements AutoCloseable {
     /**
      * Subscribes to a channel asynchronously
      *
-     * @param queueName Name of the channel to subscribe to
+     * @param queueName       Name of the channel to subscribe to
      * @param messageListener Callback function reacting to messages
      * @throws JMSException Thrown in case of internal server error
      */
