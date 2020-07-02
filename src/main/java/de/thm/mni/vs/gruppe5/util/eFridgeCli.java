@@ -33,7 +33,7 @@ public class eFridgeCli {
 
             } else {
                 while (true) {
-                    System.out.println("Enter action: (order, ticket, performance)");
+                    System.out.println("Enter action: (order, ticket, performance, part)");
                     var line = scanner.nextLine().toLowerCase().trim();
                     String action;
                     switch (line) {
