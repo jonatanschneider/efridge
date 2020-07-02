@@ -1,13 +1,12 @@
 package de.thm.mni.vs.gruppe5.common;
 
-import com.google.gson.Gson;
-
-import javax.jms.JMSException;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+/**
+ * Representation of orders used to send orders from CLI to HQ
+ */
 public class FrontendOrder implements FrontendItem {
     public String customerId;
 
@@ -29,8 +28,14 @@ public class FrontendOrder implements FrontendItem {
         this.orderProductIdsWithQuantity = orderProductIdsWithQuantity;
     }
 
+    /**
+     * Validate the order
+     * @return is order valid
+     */
     @Override
     public boolean isValid() {
+        // Check that for each item the selected product is valid (we have products with ids 0-4)
+        // and check that no item has a negative quantity
         return getOrderProductIdsWithQuantity().entrySet().stream()
                 .anyMatch(entrySet ->
                         entrySet.getKey() >= 0 &&
@@ -38,6 +43,11 @@ public class FrontendOrder implements FrontendItem {
                         entrySet.getValue() > 0);
     }
 
+    /**
+     * Allows interactive creation of a new order via console
+     *
+     * @return order with user-defined products and quantity
+     */
     @Override
     public FrontendItem interactiveCreation() {
         var scanner = new Scanner(System.in);
