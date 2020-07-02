@@ -47,8 +47,8 @@ public class Headquarter {
 
         this.orderPublisher = new Publisher(Config.ORDER_QUEUE);
         this.ticketPublisher = new Publisher(Config.TICKET_QUEUE);
-        this.updatePartCostPublisherUS = new Publisher(Config.UPDATE_PARTS_COST_TOPIC_US);
-        this.updatePartCostPublisherCN = new Publisher(Config.UPDATE_PARTS_COST_TOPIC_CN);
+        this.updatePartCostPublisherUS = new Publisher(Config.UPDATE_PARTS_COST_QUEUE_US);
+        this.updatePartCostPublisherCN = new Publisher(Config.UPDATE_PARTS_COST_QUEUE_CN);
         this.finishedOrdersSubscriber = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
         this.finishedTicketsSubscriber = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
         this.reportSubscriber = new Subscriber(Config.REPORT_QUEUE, incomingReportListener);
@@ -158,11 +158,11 @@ public class Headquarter {
                 } else if (object instanceof Part) {
                     var destination = ((ActiveMQObjectMessage) m).getOriginalDestination().getPhysicalName();
                     switch (destination) {
-                        case Config.UPDATE_PARTS_COST_TOPIC_CN -> {
+                        case Config.UPDATE_PARTS_COST_QUEUE_CN -> {
                             System.out.println("Re-publish update part cost to China " + object);
                             updatePartCostPublisherCN.publish(object);
                         }
-                        case Config.UPDATE_PARTS_COST_TOPIC_US -> {
+                        case Config.UPDATE_PARTS_COST_QUEUE_US -> {
                             System.out.println("Re-publish update part cost to USA " + object);
                             updatePartCostPublisherUS.publish(object);
                         }

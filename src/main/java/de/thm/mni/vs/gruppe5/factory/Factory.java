@@ -80,9 +80,9 @@ public class Factory {
         this.reportPublisher = new Publisher(Config.REPORT_QUEUE);
 
         if (location == Location.USA) {
-            this.updatePartCostSubscriber = new Subscriber(Config.UPDATE_PARTS_COST_TOPIC_US, updatePartCosts);
+            this.updatePartCostSubscriber = new Subscriber(Config.UPDATE_PARTS_COST_QUEUE_US, updatePartCosts);
         } else {
-            this.updatePartCostSubscriber = new Subscriber(Config.UPDATE_PARTS_COST_TOPIC_CN, updatePartCosts);
+            this.updatePartCostSubscriber = new Subscriber(Config.UPDATE_PARTS_COST_QUEUE_CN, updatePartCosts);
         }
 
         // Initialize and start report task
