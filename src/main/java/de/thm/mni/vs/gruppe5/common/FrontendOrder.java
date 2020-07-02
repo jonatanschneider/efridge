@@ -49,7 +49,7 @@ public class FrontendOrder implements FrontendItem {
         var addProduct = true;
         do {
             System.out.println("Select product (1-5)");
-            var productId = scanner.nextInt();
+            var productId = scanner.nextInt() - 1;
             scanner.nextLine();
 
             System.out.println("Enter quantity");

@@ -136,7 +136,7 @@ public class Headquarter {
         var order = new FridgeOrder();
         order.setCustomerId(frontendOrder.customerId);
         frontendOrder.getOrderProductIdsWithQuantity().entrySet().stream()
-                .map(entry -> new OrderItem(products.get(entry.getKey() - 1), entry.getValue()))
+                .map(entry -> new OrderItem(products.get(entry.getKey()), entry.getValue()))
                 .forEach(order.getOrderItems()::add);
         order.setStatus(OrderStatus.RECEIVED);
         return order;
