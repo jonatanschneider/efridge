@@ -6,6 +6,9 @@ import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
 
+/**
+ * Representation of a support ticket
+ */
 @Entity
 public class SupportTicket implements Serializable, Completable {
     @Id
@@ -84,6 +87,11 @@ public class SupportTicket implements Serializable, Completable {
         this.text = text;
     }
 
+    /**
+     * Append a text to the current content of the ticket
+     * Added text will be separated by a dashed line from the old content
+     * @param text text to be added
+     */
     public void appendText(String text) {
         this.text += "\n--------------\n" + text;
     }

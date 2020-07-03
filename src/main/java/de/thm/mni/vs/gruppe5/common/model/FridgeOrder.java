@@ -8,6 +8,9 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Represents an order of a customer with (multiple) items
+ */
 @Entity
 public class FridgeOrder implements Serializable, Completable {
     @Id

@@ -20,12 +20,15 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Represents the eFridge Headquarter in London
+ */
 public class Headquarter {
     private final static Location location = Location.HEADQUARTER;
     private final Subscriber finishedOrdersSubscriber;
     private final Subscriber finishedTicketsSubscriber;
-    private Subscriber reportSubscriber;
-    private Subscriber dlqSubscriber;
+    private final Subscriber reportSubscriber;
+    private final Subscriber dlqSubscriber;
     private Publisher orderPublisher;
     private Publisher updatePartCostPublisherUS;
     private Publisher updatePartCostPublisherCN;
@@ -71,6 +74,7 @@ public class Headquarter {
         server.patch(Config.TICKET_PATH + "/:id", ticketController::patchTicket);
         server.post(Config.PARTS_PATH + "/:id", this::updatePart);
         server.get(Config.PERFORMANCE_PATH, this::getPerformance);
+
     }
 
     private void updatePart(Context ctx) throws JMSException {
@@ -181,35 +185,14 @@ public class Headquarter {
             emf.close();
             System.out.println("Closing ActiveMQ connections");
 
-            if (orderPublisher != null) {
-                orderPublisher.close();
-            }
-            if (finishedOrdersSubscriber != null) {
-                finishedOrdersSubscriber.close();
-            }
-
-            if (ticketPublisher != null) {
-                ticketPublisher.close();
-            }
-            if (finishedTicketsSubscriber != null) {
-                finishedTicketsSubscriber.close();
-            }
-
-            if (reportSubscriber != null) {
-                reportSubscriber.close();
-            }
-
-            if (dlqSubscriber != null) {
-                dlqSubscriber.close();
-            }
-
-            if (updatePartCostPublisherCN != null) {
-                updatePartCostPublisherCN.close();
-            }
-
-            if (updatePartCostPublisherUS != null) {
-                updatePartCostPublisherUS.close();
-            }
+            if (orderPublisher != null) orderPublisher.close();
+            if (finishedOrdersSubscriber != null) finishedOrdersSubscriber.close();
+            if (ticketPublisher != null) ticketPublisher.close();
+            if (finishedTicketsSubscriber != null) finishedTicketsSubscriber.close();
+            if (reportSubscriber != null) reportSubscriber.close();
+            if (dlqSubscriber != null) dlqSubscriber.close();
+            if (updatePartCostPublisherCN != null) updatePartCostPublisherCN.close();
+            if (updatePartCostPublisherUS != null) updatePartCostPublisherUS.close();
         });
     }
 }

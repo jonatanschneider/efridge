@@ -7,6 +7,9 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Random;
 
+/**
+ * Represents a single item of an order
+ */
 @Entity
 public class OrderItem implements Serializable, Completable {
     @Id @GeneratedValue(generator="system-uuid")

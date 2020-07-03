@@ -1,10 +1,12 @@
 package de.thm.mni.vs.gruppe5.common.model;
-import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Set;
 
+/**
+ * Represents a product (in our case a specific fridge)
+ */
 @Entity
 public class Product implements Serializable {
     @Id

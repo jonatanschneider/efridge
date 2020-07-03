@@ -5,6 +5,9 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.io.Serializable;
 
+/**
+ * Represents one part of a specific product
+ */
 @Entity
 public class ProductPart implements Serializable {
     @Id @GeneratedValue(generator="system-uuid")

@@ -8,6 +8,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import java.io.Serializable;
 
+/**
+ * Contains key performance indicators
+ */
 @Entity
 public class Performance implements Serializable {
     @Id @GeneratedValue(generator="system-uuid")

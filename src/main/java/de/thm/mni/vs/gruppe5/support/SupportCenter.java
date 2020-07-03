@@ -111,13 +111,8 @@ public class SupportCenter {
             System.out.println("Closing database connection");
             emf.close();
             System.out.println("Closing ActiveMQ connections");
-            if (ticketSubscriber != null) {
-                ticketSubscriber.close();
-            }
-            if (finishedTicketPublisher != null) {
-                finishedTicketPublisher.close();
-            }
-
+            if (ticketSubscriber != null) ticketSubscriber.close();
+            if (finishedTicketPublisher != null) finishedTicketPublisher.close();
         });
     }
 }
