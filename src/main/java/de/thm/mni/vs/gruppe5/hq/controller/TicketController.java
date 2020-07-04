@@ -36,6 +36,33 @@ public class TicketController {
         ctx.status(201);
     }
 
+    public void patchTicket(Context ctx) throws JMSException {
+        var updatedTicket = ctx.bodyAsClass(TicketPatch.class);
+
+        EntityManager em = emf.createEntityManager();
+        var ticket = em.find(SupportTicket.class, ctx.pathParam("id"));
+
+        if (ticket == null) {
+            ctx.status(400);
+            return;
+        }
+
+        if (ticket.getStatus() != TicketStatus.WAITING) {
+            ctx.status(423);
+            return;
+        }
+
+        em.getTransaction().begin();
+        ticket.appendText(updatedTicket.getText());
+        ticket.setStatus(TicketStatus.RECEIVED);
+        em.getTransaction().commit();
+
+        System.out.println("Send updated ticket to support centers: " + ticket.toString());
+        publisher.publish(ticket);
+        ctx.status(204);
+        em.close();
+    }
+
     public void getTicket(Context ctx) {
         EntityManager em = emf.createEntityManager();
         ctx.json(em.find(SupportTicket.class, ctx.pathParam("id")));
