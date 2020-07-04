@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.*;
 import de.thm.mni.vs.gruppe5.hq.controller.OrderController;
+import de.thm.mni.vs.gruppe5.hq.controller.TicketController;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.json.JavalinJson;
@@ -58,37 +59,16 @@ public class Headquarter {
         JavalinJson.setToJsonMapper(gson::toJson);
 
         OrderController orderController = new OrderController(emf, orderPublisher);
+        TicketController ticketController = new TicketController(emf, ticketPublisher);
 
         server = Javalin.create().start(Config.SERVER_PORT);
         server.post(Config.ORDER_PATH, orderController::createOrder);
         server.get(Config.ORDER_PATH, orderController::getOrders);
         server.get(Config.ORDER_PATH  + "/:id", orderController::getOrder);
-        server.post(Config.TICKET_PATH, this::createTicket);
+        server.get(Config.TICKET_PATH + "/:id", ticketController::getTicket);
+        server.post(Config.TICKET_PATH, ticketController::createTicket);
         server.post(Config.PARTS_PATH + "/:id", this::updatePart);
-        server.get(Config.TICKET_PATH + "/:id", this::getTicket);
         server.get(Config.PERFORMANCE_PATH, this::getPerformance);
-    }
-
-    private void getTicket(Context ctx) {
-        EntityManager em = emf.createEntityManager();
-        ctx.json(em.find(SupportTicket.class, ctx.pathParam("id")));
-        em.close();
-    }
-
-    private void createTicket(Context ctx) throws JMSException {
-        var frontendTicket = ctx.bodyAsClass(FrontendTicket.class);
-
-        if (!frontendTicket.isValid()) {
-            System.out.println("Discarding invalid ticket " + frontendTicket);
-            ctx.status(400);
-            return;
-        }
-
-        var ticket = buildSupportTicket(frontendTicket);
-        DatabaseUtility.persist(emf, ticket);
-        System.out.println("Send ticket to support centers: " + ticket.toString());
-        ticketPublisher.publish(ticket);
-        ctx.status(201);
     }
 
     private void updatePart(Context ctx) throws JMSException {
@@ -112,16 +92,6 @@ public class Headquarter {
                 em.createQuery("SELECT p FROM Performance p", Performance.class);
         ctx.json(query.getResultList());
         em.close();
-    }
-
-    private SupportTicket buildSupportTicket(FrontendTicket frontendTicket) {
-        var ticket = new SupportTicket();
-        ticket.setCustomerId(frontendTicket.customerId);
-        ticket.setCreationTime(frontendTicket.creationTime);
-        ticket.setClosingTime(frontendTicket.closingTime);
-        ticket.setStatus(frontendTicket.status);
-        ticket.setText(frontendTicket.text);
-        return ticket;
     }
 
     private final MessageListener finishedOrderListener = m -> {
