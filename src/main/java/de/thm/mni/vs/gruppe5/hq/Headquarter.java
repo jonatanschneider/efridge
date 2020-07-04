@@ -66,6 +66,7 @@ public class Headquarter {
         server.get(Config.ORDER_PATH, orderController::getOrders);
         server.get(Config.ORDER_PATH  + "/:id", orderController::getOrder);
         server.get(Config.TICKET_PATH + "/:id", ticketController::getTicket);
+        server.get(Config.TICKET_PATH, ticketController::getTickets);
         server.post(Config.TICKET_PATH, ticketController::createTicket);
         server.post(Config.PARTS_PATH + "/:id", this::updatePart);
         server.get(Config.PERFORMANCE_PATH, this::getPerformance);

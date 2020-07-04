@@ -42,6 +42,21 @@ public class TicketController {
         em.close();
     }
 
+    public void getTickets(Context ctx) {
+        EntityManager em = emf.createEntityManager();
+        String customerId = ctx.queryParam(Config.CUSTOMER_ID_PARAM);
+        TypedQuery<SupportTicket> query;
+
+        if (customerId != null) {
+            query = em.createQuery("SELECT st FROM SupportTicket st WHERE st.customerId = :customerId", SupportTicket.class);
+            query.setParameter("customerId", customerId);
+        } else {
+            query = em.createQuery("SELECT st FROM SupportTicket st", SupportTicket.class);
+        }
+        ctx.json(query.getResultList());
+        em.close();
+    }
+
     private SupportTicket buildSupportTicket(FrontendTicket frontendTicket) {
         var ticket = new SupportTicket();
         ticket.setCustomerId(frontendTicket.customerId);
