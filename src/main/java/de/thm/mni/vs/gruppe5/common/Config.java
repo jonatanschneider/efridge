@@ -4,6 +4,7 @@ public class Config {
     public static final int SERVER_PORT = 7000;
     public static final String SERVER_URL = "http://localhost:" + SERVER_PORT;
     public static final String ORDER_PATH  = "/orders";
+    public static final String CUSTOMER_ID_PARAM = "customerId";
     public static final String ORDER_URL = SERVER_URL + ORDER_PATH;
     public static final String TICKET_PATH  = "/tickets";
     public static final String TICKET_URL = SERVER_URL + TICKET_PATH;

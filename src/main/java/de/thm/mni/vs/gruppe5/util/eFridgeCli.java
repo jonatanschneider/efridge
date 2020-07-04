@@ -2,6 +2,7 @@ package de.thm.mni.vs.gruppe5.util;
 
 import com.google.gson.Gson;
 import de.thm.mni.vs.gruppe5.common.*;
+import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
 import de.thm.mni.vs.gruppe5.common.model.Performance;
 import okhttp3.*;
 
@@ -35,8 +36,22 @@ public class eFridgeCli {
                     var line = scanner.nextLine().toLowerCase().trim();
                     switch (line) {
                         case "order":
-                            item = new FrontendOrder().interactiveCreation();
-                            post(Config.ORDER_URL, item);
+                            System.out.println("create or status");
+                            var action = scanner.nextLine();
+
+                            switch (action) {
+                                case "create":
+                                    item = new FrontendOrder().interactiveCreation();
+                                    post(Config.ORDER_URL, item);
+                                    break;
+                                case "status":
+                                    System.out.println("Enter customer id");
+                                    var customerId = scanner.nextLine();
+                                    FridgeOrder[] orders = getOrders(customerId);
+                                    System.out.println(Arrays.toString(orders));
+                                    break;
+                            }
+
                             break;
                         case "ticket":
                             item = new FrontendTicket().interactiveCreation();
@@ -68,6 +83,19 @@ public class eFridgeCli {
                 .build();
         Response response = client.newCall(request).execute();
         return new Gson().fromJson(response.body().string(), Performance[].class);
+    }
+
+    private static FridgeOrder[] getOrders(String customerId) throws IOException {
+        HttpUrl url = HttpUrl.parse(Config.ORDER_URL).newBuilder()
+                .addQueryParameter(Config.CUSTOMER_ID_PARAM, customerId)
+                .build();
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+        Response response = client.newCall(request).execute();
+        return new Gson().fromJson(response.body().string(), FridgeOrder[].class);
     }
 
     private static boolean post(String url, Object object) throws IOException {
