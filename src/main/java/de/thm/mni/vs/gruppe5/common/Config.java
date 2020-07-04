@@ -29,7 +29,7 @@ public class Config {
     public static final float PRODUCTION_COST_PER_SECOND = 0.5f;
     public static final long DAY_DURATION_IN_SECONDS = 60;
     public static final long REPORTS_PER_DAY = 4;
-    public static final float CHANCE_OF_CLOSING_TICKET = 0.4f;
+    public static final float CHANCE_OF_CLOSING_TICKET = 0.6f;
 
     public static String getPartsUrl(Supplier supplier) {
         if (supplier == Supplier.CoolMechanics) {
