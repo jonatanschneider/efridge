@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
 import de.thm.mni.vs.gruppe5.common.model.Performance;
+import de.thm.mni.vs.gruppe5.common.model.SupportTicket;
 import okhttp3.*;
 
 import java.io.IOException;
@@ -34,10 +35,11 @@ public class eFridgeCli {
                 while (true) {
                     System.out.println("Enter action: (order, ticket, performance)");
                     var line = scanner.nextLine().toLowerCase().trim();
+                    String action;
                     switch (line) {
                         case "order":
                             System.out.println("create or status");
-                            var action = scanner.nextLine();
+                            action = scanner.nextLine();
 
                             switch (action) {
                                 case "create":
@@ -54,8 +56,29 @@ public class eFridgeCli {
 
                             break;
                         case "ticket":
-                            item = new FrontendTicket().interactiveCreation();
-                            post(Config.TICKET_URL, item);
+                            System.out.println("create, status or update");
+                            action = scanner.nextLine();
+
+                            switch (action) {
+                                case "create":
+                                    item = new FrontendTicket().interactiveCreation();
+                                    post(Config.TICKET_URL, item);
+                                    break;
+                                case "status":
+                                    System.out.println("Enter customer id");
+                                    var customerId = scanner.nextLine();
+                                    SupportTicket[] tickets = getTickets(customerId);
+                                    System.out.println(Arrays.toString(tickets));
+                                    break;
+                                case "update":
+                                    System.out.println("Enter ticket id");
+                                    var ticketId = scanner.nextLine();
+                                    System.out.println("Enter text to attach");
+                                    var text = scanner.nextLine();
+                                    var ticketPatch = new TicketPatch(text);
+                                    patchTicket(ticketId, ticketPatch);
+                                    break;
+                            }
                             break;
                         case "performance":
                             System.out.println(Arrays.toString(getPerformance()));
@@ -96,6 +119,31 @@ public class eFridgeCli {
                 .build();
         Response response = client.newCall(request).execute();
         return new Gson().fromJson(response.body().string(), FridgeOrder[].class);
+    }
+
+    private static SupportTicket[] getTickets(String customerId) throws IOException {
+        HttpUrl url = HttpUrl.parse(Config.TICKET_URL).newBuilder()
+                .addQueryParameter(Config.CUSTOMER_ID_PARAM, customerId)
+                .build();
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+        Response response = client.newCall(request).execute();
+        return new Gson().fromJson(response.body().string(), SupportTicket[].class);
+    }
+
+    private static boolean patchTicket(String ticketId, TicketPatch ticketPatch) throws IOException {
+        OkHttpClient client = new OkHttpClient();
+        String json = new Gson().toJson(ticketPatch);
+        RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
+        Request request = new Request.Builder()
+                .url(Config.TICKET_URL + "/" + ticketId)
+                .patch(body)
+                .build();
+        Response response = client.newCall(request).execute();
+        return response.code() == HttpURLConnection.HTTP_NO_CONTENT;
     }
 
     private static boolean post(String url, Object object) throws IOException {
