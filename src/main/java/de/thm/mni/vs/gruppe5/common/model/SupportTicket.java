@@ -13,7 +13,7 @@ public class SupportTicket implements Serializable, Completable {
 
     private String customerId;
 
-    private boolean isClosed;
+    private TicketStatus status;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date creationTime;
@@ -32,9 +32,9 @@ public class SupportTicket implements Serializable, Completable {
 
     }
 
-    public SupportTicket(String customerId, boolean isClosed, Date creationTime, Date closingTime, String text) {
+    public SupportTicket(String customerId, TicketStatus status, Date creationTime, Date closingTime, String text) {
         this.customerId = customerId;
-        this.isClosed = isClosed;
+        this.status = status;
         this.creationTime = creationTime;
         this.closingTime = closingTime;
         this.text = text;
@@ -52,12 +52,12 @@ public class SupportTicket implements Serializable, Completable {
         this.customerId = customerId;
     }
 
-    public boolean isClosed() {
-        return isClosed;
+    public TicketStatus getStatus() {
+        return status;
     }
 
-    public void setClosed(boolean closed) {
-        isClosed = closed;
+    public void setStatus(TicketStatus status) {
+        this.status = status;
     }
 
     public Date getCreationTime() {
@@ -93,9 +93,10 @@ public class SupportTicket implements Serializable, Completable {
         return "SupportTicket{" +
                 "id='" + id + '\'' +
                 ", customerId='" + customerId + '\'' +
-                ", isClosed=" + isClosed +
+                ", status=" + status +
                 ", creationTime=" + creationTime +
                 ", closingTime=" + closingTime +
+                ", completedAt=" + completedAt +
                 ", text='" + text + '\'' +
                 '}';
     }

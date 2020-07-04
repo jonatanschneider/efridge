@@ -119,7 +119,7 @@ public class Headquarter {
         ticket.setCustomerId(frontendTicket.customerId);
         ticket.setCreationTime(frontendTicket.creationTime);
         ticket.setClosingTime(frontendTicket.closingTime);
-        ticket.setClosed(frontendTicket.isClosed);
+        ticket.setStatus(frontendTicket.status);
         ticket.setText(frontendTicket.text);
         return ticket;
     }
@@ -144,15 +144,13 @@ public class Headquarter {
                 var object = ((ObjectMessage) m).getObject();
                 if (object instanceof SupportTicket) {
                     var ticket = (SupportTicket) object;
-                    if (!ticket.isClosed()) {
-                        System.out.println("Received unfinished ticket: " + object);
-                        System.out.println("Sending back to SupportCenter");
-                        ticketPublisher.publish(ticket);
-                    } else {
+                    if (ticket.getStatus() == TicketStatus.CLOSED) {
                         System.out.println("Received finished ticket: " + object);
-                        ((SupportTicket) object).setClosingTime(new Date(System.currentTimeMillis()));
-                        DatabaseUtility.merge(emf, object);
+                        ticket.setClosingTime(new Date(System.currentTimeMillis()));
+                    } else {
+                        System.out.println("Received unfinished ticket: " + object);
                     }
+                    DatabaseUtility.merge(emf, ticket);
                 }
             } catch (JMSException e) {
                 e.printStackTrace();
@@ -182,7 +180,7 @@ public class Headquarter {
                 if (object instanceof FridgeOrder && ((FridgeOrder) object).getStatus() != OrderStatus.COMPLETED) {
                     System.out.println("Re-sending order to factories: " + object);
                     orderPublisher.publish(object);
-                } else if (object instanceof SupportTicket && !((SupportTicket) object).isClosed()) {
+                } else if (object instanceof SupportTicket && ((SupportTicket) object).getStatus() == TicketStatus.RECEIVED) {
                     System.out.println("Re-sending ticket to support centers: " + object);
                     ticketPublisher.publish(object);
                 } else if (object instanceof Part) {
