@@ -3,34 +3,51 @@ package de.thm.mni.vs.gruppe5.factory;
 import de.thm.mni.vs.gruppe5.common.PerformanceTracker;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
 import de.thm.mni.vs.gruppe5.common.model.OrderStatus;
+import de.thm.mni.vs.gruppe5.common.model.Supplier;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
 
 import javax.persistence.EntityManagerFactory;
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 
 public class Production implements IProduction {
-    private PerformanceTracker performanceTracker;
-    private EntityManagerFactory emf;
+    private final PerformanceTracker performanceTracker;
+    private final EntityManagerFactory emf;
 
     public Production(EntityManagerFactory emf) {
         this.emf = emf;
         performanceTracker = PerformanceTracker.getInstance();
     }
 
-    @Override
     public CompletableFuture<FridgeOrder> orderParts(FridgeOrder order) {
         return CompletableFuture.supplyAsync(() -> {
+
             if (!order.hasInit()) {
-                order.initRandom(10);
-                DatabaseUtility.merge(emf, order);
+                try {
+                    var waitingTime = Math.max(
+                            new PartProcurement(Supplier.CoolMechanics).orderPartsFor(order),
+                            new PartProcurement(Supplier.ElectroStuff).orderPartsFor(order));
+
+                    System.out.println("Waiting time for " + order.getId() + " is " + waitingTime + " seconds");
+                    order.init(waitingTime);
+                    DatabaseUtility.merge(emf, order);
+                } catch (IOException ex) {
+                    // If this happens, the supplier server send an invalid response, we can't do anything about that
+                    return order;
+                } catch (RuntimeException ex) {
+                    // This means our database is corrupt because either the part ids are incorrect or the ids are
+                    // mapped to the wrong supplier
+                    return order;
+                }
             }
+
             try {
                 order.complete();
             } catch (InterruptedException e) {
                 System.out.println("Manually interrupting waiting time");
             }
-
+            
             order.setPartsOrdered(true);
             DatabaseUtility.merge(emf, order);
             return order;
@@ -40,6 +57,10 @@ public class Production implements IProduction {
     @Override
     public CompletableFuture<FridgeOrder> produce(FridgeOrder order, float factoryTimeFactor) {
         return CompletableFuture.supplyAsync(() -> {
+            if (!order.isPartsOrdered()) {
+                // parts weren't ordered, so we can't produce
+                return order;
+            }
             System.out.println("Producing order " + order.getId());
 
             order.getOrderItems().forEach(orderItem -> {
