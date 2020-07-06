@@ -114,8 +114,6 @@ public class Headquarter {
         em.close();
     }
 
-
-
     private SupportTicket buildSupportTicket(FrontendTicket frontendTicket) {
         var ticket = new SupportTicket();
         ticket.setCustomerId(frontendTicket.customerId);
