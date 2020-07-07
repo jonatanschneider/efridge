@@ -45,14 +45,14 @@ public class Headquarter {
     private Headquarter() throws JMSException {
         this.emf = DatabaseUtility.getEntityManager(location);
 
-        this.finishedOrdersSubscriber = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
-        this.finishedTicketsSubscriber = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
-        this.reportSubscriber = new Subscriber(Config.REPORT_QUEUE, incomingReportListener);
-        this.dlqSubscriber = new Subscriber(Config.DEAD_LETTER_QUEUE, deadLetterQueueListener);
         this.orderPublisher = new Publisher(Config.ORDER_QUEUE);
         this.ticketPublisher = new Publisher(Config.TICKET_QUEUE);
         this.updatePartCostPublisherUS = new Publisher(Config.UPDATE_PARTS_COST_TOPIC_US);
         this.updatePartCostPublisherCN = new Publisher(Config.UPDATE_PARTS_COST_TOPIC_CN);
+        this.finishedOrdersSubscriber = new Subscriber(Config.FINISHED_ORDER_QUEUE, finishedOrderListener);
+        this.finishedTicketsSubscriber = new Subscriber(Config.FINISHED_TICKET_QUEUE, finishedTicketListener);
+        this.reportSubscriber = new Subscriber(Config.REPORT_QUEUE, incomingReportListener);
+        this.dlqSubscriber = new Subscriber(Config.DEAD_LETTER_QUEUE, deadLetterQueueListener);
 
         Gson gson = new GsonBuilder().create();
         JavalinJson.setFromJsonMapper(gson::fromJson);
