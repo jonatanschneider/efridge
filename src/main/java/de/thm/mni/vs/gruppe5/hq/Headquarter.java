@@ -102,6 +102,10 @@ public class Headquarter {
         this.updatePartCostPublisherCN.publish(part);
     }
 
+    /**
+     * Handles get requests, returns all performance reports
+     * @param ctx request's context
+     */
     private void getPerformance(Context ctx) {
         EntityManager em = emf.createEntityManager();
         TypedQuery<Performance> query =
