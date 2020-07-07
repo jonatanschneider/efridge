@@ -6,7 +6,15 @@ import de.thm.mni.vs.gruppe5.common.model.TicketStatus;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Represents an agent that is able to handle Support Tickets.
+ */
 public class Agent implements IAgent {
+    /**
+     * Handle / Process a support ticket
+     * @param ticket ticket to handle / process
+     * @return future resolving to an updated ticket after it has been processed
+     */
     @Override
     public CompletableFuture<SupportTicket> handleTicket(SupportTicket ticket) {
         return CompletableFuture.supplyAsync(() -> {

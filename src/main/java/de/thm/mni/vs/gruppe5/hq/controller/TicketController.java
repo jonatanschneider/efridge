@@ -10,6 +10,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.TypedQuery;
 
+/**
+ * HTTP controller to handle ticket related requests
+ */
 public class TicketController {
     private final EntityManagerFactory emf;
     private final Publisher publisher;
@@ -19,6 +22,13 @@ public class TicketController {
         this.publisher = publisher;
     }
 
+    /**
+     * Handles post requests
+     *
+     * If the passed ticket is valid it gets stored in the db and passed to the support centers
+     * @param ctx request's context
+     * @throws JMSException
+     */
     public void createTicket(Context ctx) throws JMSException {
         var frontendTicket = ctx.bodyAsClass(FrontendTicket.class);
 
@@ -36,6 +46,12 @@ public class TicketController {
         ctx.status(201);
     }
 
+    /**
+     * Handles patch request to update a support ticket
+     *
+     * Request only accepted if the targeted support ticket is in status "waiting"
+     * @param ctx request's context
+     */
     public void patchTicket(Context ctx) throws JMSException {
         var updatedTicket = ctx.bodyAsClass(TicketPatch.class);
 
@@ -63,12 +79,21 @@ public class TicketController {
         em.close();
     }
 
+    /**
+     * Handles get requests for a specific ticket
+     * @param ctx request's context
+     */
     public void getTicket(Context ctx) {
         EntityManager em = emf.createEntityManager();
         ctx.json(em.find(SupportTicket.class, ctx.pathParam("id")));
         em.close();
     }
 
+    /**
+     * Handles get requests for all tickets
+     * Optional parameter "customerId" to get all tickets for a specific customer.
+     * @param ctx request's context
+     */
     public void getTickets(Context ctx) {
         EntityManager em = emf.createEntityManager();
         String customerId = ctx.queryParam(Config.CUSTOMER_ID_PARAM);
@@ -84,6 +109,12 @@ public class TicketController {
         em.close();
     }
 
+    /**
+     * Helper function to build a support ticket from the request body.
+     *
+     * @param frontendTicket request object
+     * @return built support ticket
+     */
     private SupportTicket buildSupportTicket(FrontendTicket frontendTicket) {
         var ticket = new SupportTicket();
         ticket.setCustomerId(frontendTicket.customerId);

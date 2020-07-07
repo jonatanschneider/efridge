@@ -9,6 +9,10 @@ import de.thm.mni.vs.gruppe5.common.model.Performance;
 import javax.jms.JMSException;
 import java.util.TimerTask;
 
+/**
+ * Task to report the factory's KPIs in a fixed interval.
+ * Performance gets reset once all reports for a day have been sent.
+ */
 public class ReportTask extends TimerTask {
     private int reportCount;
     private final Location location;
@@ -35,7 +39,7 @@ public class ReportTask extends TimerTask {
             e.printStackTrace();
         }
 
-        // Reset data when the last report for today was sent
+        // Reset data when the last report for today has been sent
         if (isTodaysLastReport()) {
             System.out.println("Day passed: reset report data.");
             performanceTracker.reset();
