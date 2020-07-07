@@ -5,6 +5,7 @@ import de.thm.mni.vs.gruppe5.common.Location;
 import de.thm.mni.vs.gruppe5.common.Publisher;
 import de.thm.mni.vs.gruppe5.common.Subscriber;
 import de.thm.mni.vs.gruppe5.common.model.SupportTicket;
+import de.thm.mni.vs.gruppe5.common.model.TicketStatus;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
 
 import javax.jms.JMSException;
@@ -61,7 +62,7 @@ public class SupportCenter {
         var query = em.createQuery("SELECT t FROM SupportTicket t");
         ((List<SupportTicket>) query.getResultList())
                 .stream()
-                .filter(t -> !t.isClosed())
+                .filter(t -> t.getStatus() == TicketStatus.RECEIVED)
                 .forEach(this::processTicket);
         em.close();
     }

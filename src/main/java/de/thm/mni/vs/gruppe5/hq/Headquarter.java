@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.*;
 import de.thm.mni.vs.gruppe5.hq.controller.OrderController;
+import de.thm.mni.vs.gruppe5.hq.controller.TicketController;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.json.JavalinJson;
@@ -58,37 +59,18 @@ public class Headquarter {
         JavalinJson.setToJsonMapper(gson::toJson);
 
         OrderController orderController = new OrderController(emf, orderPublisher);
+        TicketController ticketController = new TicketController(emf, ticketPublisher);
 
         server = Javalin.create().start(Config.SERVER_PORT);
         server.post(Config.ORDER_PATH, orderController::createOrder);
         server.get(Config.ORDER_PATH, orderController::getOrders);
         server.get(Config.ORDER_PATH  + "/:id", orderController::getOrder);
-        server.post(Config.TICKET_PATH, this::createTicket);
+        server.get(Config.TICKET_PATH + "/:id", ticketController::getTicket);
+        server.get(Config.TICKET_PATH, ticketController::getTickets);
+        server.post(Config.TICKET_PATH, ticketController::createTicket);
+        server.patch(Config.TICKET_PATH + "/:id", ticketController::patchTicket);
         server.post(Config.PARTS_PATH + "/:id", this::updatePart);
-        server.get(Config.TICKET_PATH + "/:id", this::getTicket);
         server.get(Config.PERFORMANCE_PATH, this::getPerformance);
-    }
-
-    private void getTicket(Context ctx) {
-        EntityManager em = emf.createEntityManager();
-        ctx.json(em.find(SupportTicket.class, ctx.pathParam("id")));
-        em.close();
-    }
-
-    private void createTicket(Context ctx) throws JMSException {
-        var frontendTicket = ctx.bodyAsClass(FrontendTicket.class);
-
-        if (!frontendTicket.isValid()) {
-            System.out.println("Discarding invalid ticket " + frontendTicket);
-            ctx.status(400);
-            return;
-        }
-
-        var ticket = buildSupportTicket(frontendTicket);
-        DatabaseUtility.persist(emf, ticket);
-        System.out.println("Send ticket to support centers: " + ticket.toString());
-        ticketPublisher.publish(ticket);
-        ctx.status(201);
     }
 
     private void updatePart(Context ctx) throws JMSException {
@@ -114,16 +96,6 @@ public class Headquarter {
         em.close();
     }
 
-    private SupportTicket buildSupportTicket(FrontendTicket frontendTicket) {
-        var ticket = new SupportTicket();
-        ticket.setCustomerId(frontendTicket.customerId);
-        ticket.setCreationTime(frontendTicket.creationTime);
-        ticket.setClosingTime(frontendTicket.closingTime);
-        ticket.setClosed(frontendTicket.isClosed);
-        ticket.setText(frontendTicket.text);
-        return ticket;
-    }
-
     private final MessageListener finishedOrderListener = m -> {
         if (m instanceof ObjectMessage) {
             try {
@@ -144,15 +116,13 @@ public class Headquarter {
                 var object = ((ObjectMessage) m).getObject();
                 if (object instanceof SupportTicket) {
                     var ticket = (SupportTicket) object;
-                    if (!ticket.isClosed()) {
-                        System.out.println("Received unfinished ticket: " + object);
-                        System.out.println("Sending back to SupportCenter");
-                        ticketPublisher.publish(ticket);
-                    } else {
+                    if (ticket.getStatus() == TicketStatus.CLOSED) {
                         System.out.println("Received finished ticket: " + object);
-                        ((SupportTicket) object).setClosingTime(new Date(System.currentTimeMillis()));
-                        DatabaseUtility.merge(emf, object);
+                        ticket.setClosingTime(new Date(System.currentTimeMillis()));
+                    } else {
+                        System.out.println("Received unfinished ticket: " + object);
                     }
+                    DatabaseUtility.merge(emf, ticket);
                 }
             } catch (JMSException e) {
                 e.printStackTrace();
@@ -182,7 +152,7 @@ public class Headquarter {
                 if (object instanceof FridgeOrder && ((FridgeOrder) object).getStatus() != OrderStatus.COMPLETED) {
                     System.out.println("Re-sending order to factories: " + object);
                     orderPublisher.publish(object);
-                } else if (object instanceof SupportTicket && !((SupportTicket) object).isClosed()) {
+                } else if (object instanceof SupportTicket && ((SupportTicket) object).getStatus() == TicketStatus.RECEIVED) {
                     System.out.println("Re-sending ticket to support centers: " + object);
                     ticketPublisher.publish(object);
                 } else if (object instanceof Part) {
