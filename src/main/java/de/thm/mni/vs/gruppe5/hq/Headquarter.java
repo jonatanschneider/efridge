@@ -16,9 +16,7 @@ import javax.jms.JMSException;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
 import javax.persistence.*;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Represents the eFridge Headquarter in London
@@ -39,6 +37,7 @@ public class Headquarter {
     public static void main(String[] args) {
         try {
             var hq = new Headquarter();
+            // On exit close all opened resources
             Runtime.getRuntime().addShutdownHook(hq.closeResources());
         } catch (Exception e) {
             e.printStackTrace();
@@ -48,6 +47,7 @@ public class Headquarter {
     private Headquarter() throws JMSException {
         this.emf = DatabaseUtility.getEntityManager(location);
 
+        // Initialize publisher and subscriber for all queues
         this.orderPublisher = new Publisher(Config.ORDER_QUEUE);
         this.ticketPublisher = new Publisher(Config.TICKET_QUEUE);
         this.updatePartCostPublisherUS = new Publisher(Config.UPDATE_PARTS_COST_QUEUE_US);
@@ -57,13 +57,16 @@ public class Headquarter {
         this.reportSubscriber = new Subscriber(Config.REPORT_QUEUE, incomingReportListener);
         this.dlqSubscriber = new Subscriber(Config.DEAD_LETTER_QUEUE, deadLetterQueueListener);
 
+        // Initialize Javalin server settings
         Gson gson = new GsonBuilder().create();
         JavalinJson.setFromJsonMapper(gson::fromJson);
         JavalinJson.setToJsonMapper(gson::toJson);
 
+        // Create REST controller
         OrderController orderController = new OrderController(emf, orderPublisher);
         TicketController ticketController = new TicketController(emf, ticketPublisher);
 
+        // Initialize Javalin server and routes
         server = Javalin.create().start(Config.SERVER_PORT);
         server.post(Config.ORDER_PATH, orderController::createOrder);
         server.get(Config.ORDER_PATH, orderController::getOrders);
@@ -72,20 +75,27 @@ public class Headquarter {
         server.get(Config.TICKET_PATH, ticketController::getTickets);
         server.post(Config.TICKET_PATH, ticketController::createTicket);
         server.patch(Config.TICKET_PATH + "/:id", ticketController::patchTicket);
-        server.post(Config.PARTS_PATH + "/:id", this::updatePart);
+        server.post(Config.PARTS_PATH + "/:id", this::updatePartCost);
         server.get(Config.PERFORMANCE_PATH, this::getPerformance);
-
     }
 
-    private void updatePart(Context ctx) throws JMSException {
+    /**
+     * Handles POST request for changing the cost of a part
+     * @param ctx javalin context
+     * @throws JMSException
+     */
+    private void updatePartCost(Context ctx) throws JMSException {
+        // Get the part which should be updated from the database
         var em = emf.createEntityManager();
         var part = em.find(Part.class, ctx.pathParam("id"));
-        var cost = ctx.bodyAsClass(double.class);
         em.close();
-        part.setCost(cost);
 
+        // Update the part and persist it
+        var cost = ctx.bodyAsClass(double.class);
+        part.setCost(cost);
         DatabaseUtility.merge(emf, part);
 
+        // Publish the update to the US and CN factory
         System.out.println("Publish update part cost to USA " + part);
         this.updatePartCostPublisherUS.publish(part);
         System.out.println("Publish update part cost to China " + part);
@@ -100,12 +110,16 @@ public class Headquarter {
         em.close();
     }
 
+    /**
+     * Handles JMS-Messages that indicate a order has finished
+     */
     private final MessageListener finishedOrderListener = m -> {
         if (m instanceof ObjectMessage) {
             try {
                 var object = ((ObjectMessage) m).getObject();
                 if (object instanceof FridgeOrder) {
                     System.out.println("Received finished order: " + object);
+                    // Persist the updated order into the hq database
                     DatabaseUtility.merge(emf, object);
                 }
             } catch (JMSException e) {
@@ -114,18 +128,26 @@ public class Headquarter {
         }
     };
 
+
+    /**
+     * Handles JMS-Messages that indicate a ticket has been finished
+     */
     private final MessageListener finishedTicketListener = m -> {
         if (m instanceof ObjectMessage) {
             try {
                 var object = ((ObjectMessage) m).getObject();
                 if (object instanceof SupportTicket) {
                     var ticket = (SupportTicket) object;
+
+                    // Check if the ticket has been closed by a support agent
                     if (ticket.getStatus() == TicketStatus.CLOSED) {
                         System.out.println("Received finished ticket: " + object);
+                        // We set the time in the HQ, so that we don't need to deal with local timezones from MX or IN
                         ticket.setClosingTime(new Date(System.currentTimeMillis()));
                     } else {
                         System.out.println("Received unfinished ticket: " + object);
                     }
+                    // Update the corresponding dataset in our database
                     DatabaseUtility.merge(emf, ticket);
                 }
             } catch (JMSException e) {
@@ -134,6 +156,10 @@ public class Headquarter {
         }
     };
 
+    /**
+     * Handle a JMS-Message for an incoming KPI-report
+     * Stores the report into the database
+     */
     private final MessageListener incomingReportListener = m -> {
         if (m instanceof ObjectMessage) {
             try {
@@ -178,6 +204,10 @@ public class Headquarter {
         }
     };
 
+    /**
+     * Close all opened resources such as publisher, subscriber and database connections
+     * @return thread that executes the closing
+     */
     private Thread closeResources() {
         return new Thread(() -> {
             System.out.println("Shutdown headquarter");

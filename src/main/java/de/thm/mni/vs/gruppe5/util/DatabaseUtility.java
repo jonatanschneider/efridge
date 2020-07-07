@@ -7,6 +7,9 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import java.io.Serializable;
 
+/**
+ * Wraps some JPA methods for commonly used for database actions
+ */
 public class DatabaseUtility {
     /**
      * Inserts an object into the database

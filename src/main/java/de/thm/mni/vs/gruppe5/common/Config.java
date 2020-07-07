@@ -40,6 +40,11 @@ public class Config {
     public static final long DAY_DURATION_IN_SECONDS = 60;
     public static final long REPORTS_PER_DAY = 4;
 
+    /**
+     * Get the url for ordering parts from a specified supplier
+     * @param supplier Supplier where we want to get the url from (CoolMechanics or ElectroStuff)
+     * @return url with parts path
+     */
     public static String getPartsUrl(Supplier supplier) {
         if (supplier == Supplier.CoolMechanics) {
             return COOL_MECHANICS_SERVER_URL + PARTS_PATH;
