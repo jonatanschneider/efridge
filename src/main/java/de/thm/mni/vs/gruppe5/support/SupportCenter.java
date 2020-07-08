@@ -7,6 +7,7 @@ import de.thm.mni.vs.gruppe5.common.Subscriber;
 import de.thm.mni.vs.gruppe5.common.model.SupportTicket;
 import de.thm.mni.vs.gruppe5.common.model.TicketStatus;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
+import org.hibernate.service.spi.ServiceException;
 
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
@@ -43,7 +44,9 @@ public class SupportCenter {
             var supportCenter = new SupportCenter(location, agents);
             Runtime.getRuntime().addShutdownHook(supportCenter.closeResources());
 
-        } catch (JMSException e) {
+        } catch (ServiceException e) {
+            System.err.println("Could not reach database. Exiting...");
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
