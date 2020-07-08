@@ -6,6 +6,7 @@ import de.thm.mni.vs.gruppe5.common.model.OrderStatus;
 import de.thm.mni.vs.gruppe5.common.model.Part;
 import de.thm.mni.vs.gruppe5.factory.report.ReportTask;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
+import org.hibernate.service.spi.ServiceException;
 
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
@@ -71,7 +72,9 @@ public class Factory {
             var factory = new Factory(location, productionTimeFactor, maxCapacity);
             // On exit close all opened resources
             Runtime.getRuntime().addShutdownHook(factory.closeResources());
-        } catch (JMSException e) {
+        } catch (ServiceException e) {
+            System.err.println("Could not reach database. Exiting...");
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

@@ -11,6 +11,7 @@ import io.javalin.http.Context;
 import io.javalin.plugin.json.JavalinJson;
 import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
 import org.apache.activemq.command.ActiveMQObjectMessage;
+import org.hibernate.service.spi.ServiceException;
 
 import javax.jms.JMSException;
 import javax.jms.MessageListener;
@@ -39,6 +40,8 @@ public class Headquarter {
             var hq = new Headquarter();
             // On exit close all opened resources
             Runtime.getRuntime().addShutdownHook(hq.closeResources());
+        }  catch (ServiceException e) {
+            System.err.println("Could not reach database. Exiting...");
         } catch (Exception e) {
             e.printStackTrace();
         }
