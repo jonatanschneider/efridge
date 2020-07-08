@@ -2,6 +2,9 @@ package de.thm.mni.vs.gruppe5.common;
 
 import de.thm.mni.vs.gruppe5.common.model.Supplier;
 
+/**
+ * Holds static information used for configuration
+ */
 public class Config {
     // Static information for webservers
     public static final int SERVER_PORT = 7000;
