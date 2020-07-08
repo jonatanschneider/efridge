@@ -13,9 +13,7 @@ import javax.jms.JMSException;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
 import javax.persistence.EntityManagerFactory;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Represents a support center which is responsible for handling support tickets.
@@ -23,7 +21,7 @@ import java.util.List;
 public class SupportCenter {
     private final Location location;
     private int agents;
-    private List<SupportTicket> currentTickets;
+    private Set<SupportTicket> currentTickets;
     private Publisher finishedTicketPublisher;
     private IAgent agent;
     private Subscriber ticketSubscriber;
@@ -63,7 +61,7 @@ public class SupportCenter {
         this.emf = DatabaseUtility.getEntityManager(location);
         this.location = location;
         this.agents = agents;
-        this.currentTickets = Collections.synchronizedList(new ArrayList<>(agents));
+        this.currentTickets = Collections.synchronizedSet(new HashSet<>(agents));
         ticketSubscriber = new Subscriber(Config.TICKET_QUEUE, processTicketListener);
         finishedTicketPublisher = new Publisher(Config.FINISHED_TICKET_QUEUE);
         agent = new Agent();
@@ -96,18 +94,14 @@ public class SupportCenter {
      * @param ticket
      */
     private void processTicket(SupportTicket ticket) {
-        System.out.println("Received ticket: " + ticket.toString());
-        DatabaseUtility.merge(emf, ticket);
-        if (currentTickets.size() < agents) {
+        if (!currentTickets.contains(ticket)) {
+            System.out.println("Received ticket: " + ticket.toString());
+            DatabaseUtility.merge(emf, ticket);
             if (currentTickets.size() == agents - 1) {
                 ticketSubscriber.pause();
             }
             currentTickets.add(ticket);
             agent.handleTicket(ticket).thenAccept(this::reportProcessedTicket);
-        } else {
-            // This should never happen
-            // If it does happen, current implementation of max capacity is faulty
-            throw new IllegalStateException("Max capacity reached, didn't accept ticket: " + ticket.toString());
         }
     }
 
