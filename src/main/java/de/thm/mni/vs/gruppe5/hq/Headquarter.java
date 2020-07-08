@@ -179,6 +179,10 @@ public class Headquarter {
         }
     };
 
+    /**
+     * Handles JMS-Messages from other queues which could not be delivered
+     * Will attempt to re-send orders, tickets and part cost updates
+     */
     private final MessageListener deadLetterQueueListener = m -> {
         if (m instanceof ObjectMessage) {
             try {
