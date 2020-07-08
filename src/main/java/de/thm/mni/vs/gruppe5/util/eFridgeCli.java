@@ -3,6 +3,7 @@ package de.thm.mni.vs.gruppe5.util;
 import com.google.gson.Gson;
 import de.thm.mni.vs.gruppe5.common.*;
 import de.thm.mni.vs.gruppe5.common.model.FridgeOrder;
+import de.thm.mni.vs.gruppe5.common.model.OrderStatus;
 import de.thm.mni.vs.gruppe5.common.model.Performance;
 import de.thm.mni.vs.gruppe5.common.model.SupportTicket;
 import okhttp3.*;
@@ -55,7 +56,7 @@ public class eFridgeCli {
                                     System.out.println("Enter customer id");
                                     var customerId = scanner.nextLine();
                                     FridgeOrder[] orders = getOrders(customerId);
-                                    System.out.println(Arrays.toString(orders));
+                                    Arrays.stream(orders).map(eFridgeCli::formatOrderStatus).forEach(System.out::println);
                                     break;
                             }
 
@@ -102,6 +103,14 @@ public class eFridgeCli {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    private static String formatOrderStatus(FridgeOrder order) {
+        return "FridgeOrder{" +
+                "id='" + order.getId() + '\'' +
+                ", customerId='" + order.getCustomerId() + '\'' +
+                ", status=" + order.getStatus() +
+                '}';
     }
 
     private static Performance[] getPerformance() throws IOException {
