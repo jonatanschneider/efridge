@@ -8,6 +8,7 @@ import de.thm.mni.vs.gruppe5.common.model.Supplier;
 import okhttp3.*;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -28,10 +29,11 @@ public class PartProcurement {
      * it can produce the product. We pretend that in this time the supplier will deliver the requested parts
      * @param order
      * @return time in seconds
+     * @throws SocketTimeoutException if the supplier server isn't reachable
      * @throws IOException the supplier server send an invalid response
      * @throws RuntimeException the supplier can't provide the requested parts; this happens if you order from the wrong supplier
      */
-    public int orderPartsFor(FridgeOrder order) throws IOException, RuntimeException {
+    public int orderPartsFor(FridgeOrder order) throws SocketTimeoutException, IOException, RuntimeException {
         var parts = getPartsWithQuantity(order);
         return getWaitingTime(parts);
     }
