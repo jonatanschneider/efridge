@@ -10,11 +10,17 @@ import javax.persistence.EntityManagerFactory;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
-
+/**
+ * Instances of this class are used by factories to simulate production
+ */
 public class Production implements IProduction {
     private final PerformanceTracker performanceTracker;
     private final EntityManagerFactory emf;
 
+    /**
+     *
+     * @param emf persistence entity manager factory
+     */
     public Production(EntityManagerFactory emf) {
         this.emf = emf;
         performanceTracker = PerformanceTracker.getInstance();
@@ -67,6 +73,7 @@ public class Production implements IProduction {
             }
             System.out.println("Producing order " + order.getId());
 
+            // Wait for each order item to complete
             order.getOrderItems().forEach(orderItem -> {
                 var product = orderItem.getProduct();
                 var time = Math.round(product.getProductionTime() * orderItem.getQuantity() * factoryTimeFactor);
