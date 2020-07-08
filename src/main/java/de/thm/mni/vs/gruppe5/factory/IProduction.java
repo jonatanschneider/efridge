@@ -21,7 +21,7 @@ public interface IProduction {
      *
      * @param order the order that needs to be produced
      * @param factoryTimeFactor factory specific factor the waiting time is multiplied with
-     * @return uture that will contain the order after waiting time has elapsed
+     * @return future that will contain the order after waiting time has elapsed
      */
     CompletableFuture<FridgeOrder> produce(FridgeOrder order, float factoryTimeFactor);
 }
