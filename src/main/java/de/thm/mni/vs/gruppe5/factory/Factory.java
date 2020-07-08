@@ -143,7 +143,7 @@ public class Factory {
      * @throws IllegalStateException
      */
     private void processOrder(FridgeOrder order) {
-        if (!currentOrders.contains(order)) {
+        if (!currentOrders.contains(order) && currentOrders.size() < maxCapacity) {
             System.out.println("Received order: " + order.toString());
             PerformanceTracker.getInstance().receivedOrder();
 
