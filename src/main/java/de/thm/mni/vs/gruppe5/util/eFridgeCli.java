@@ -81,7 +81,7 @@ public class eFridgeCli {
                                     System.out.println("Enter text to attach");
                                     var text = scanner.nextLine();
                                     var ticketPatch = new TicketPatch(text);
-                                    patchTicket(ticketId, ticketPatch);
+                                    patch(Config.TICKET_URL + "/" + ticketId, ticketPatch);
                                     break;
                             }
                             break;
@@ -94,7 +94,7 @@ public class eFridgeCli {
                             System.out.println("Enter new costs for part");
                             var costs = scanner.nextDouble();
                             scanner.nextLine();
-                            post(Config.PARTS_URL + "/" + partId, costs);
+                            patch(Config.PARTS_URL + "/" + partId, costs);
                             break;
                     }
                 }
@@ -139,12 +139,12 @@ public class eFridgeCli {
         return new Gson().fromJson(response.body().string(), SupportTicket[].class);
     }
 
-    private static boolean patchTicket(String ticketId, TicketPatch ticketPatch) throws IOException {
+    private static boolean patch(String url, Object object) throws IOException {
         OkHttpClient client = new OkHttpClient();
-        String json = new Gson().toJson(ticketPatch);
+        String json = new Gson().toJson(object);
         RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
         Request request = new Request.Builder()
-                .url(Config.TICKET_URL + "/" + ticketId)
+                .url(url)
                 .patch(body)
                 .build();
         Response response = client.newCall(request).execute();
