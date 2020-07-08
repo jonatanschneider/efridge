@@ -151,6 +151,7 @@ public class Factory {
                 orderSubscriber.pause();
             }
             DatabaseUtility.merge(emf, order);
+            currentOrders.add(order);
 
             // Order all needed parts, then:
             // produce the product, then:
