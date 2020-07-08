@@ -3,6 +3,7 @@ package de.thm.mni.vs.gruppe5.common.model;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 
@@ -147,5 +148,18 @@ public class SupportTicket implements Serializable, Completable {
     public void complete() throws InterruptedException {
         while (completedAt.after(new Date(System.currentTimeMillis())))
             Thread.sleep(1000);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SupportTicket that = (SupportTicket) o;
+        return id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
