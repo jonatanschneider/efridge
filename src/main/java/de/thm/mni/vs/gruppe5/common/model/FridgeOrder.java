@@ -8,6 +8,9 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Represents an order of a customer with (multiple) items
+ */
 @Entity
 public class FridgeOrder implements Serializable, Completable {
     @Id
@@ -83,11 +86,21 @@ public class FridgeOrder implements Serializable, Completable {
                 '}';
     }
 
+    /**
+     * Initialise waiting time by storing a Date in the future
+     *
+     * @param seconds waiting time in seconds
+     */
     @Override
     public void init(int seconds) {
         completedAt = new Date(System.currentTimeMillis() + seconds * 1000);
     }
 
+    /**
+     * Initialise waiting time by storing a Date in the future. Pick a random waiting time from 0 to parameter for each supplier involved in the order and add up.
+     *
+     * @param seconds maximum waiting time in seconds
+     */
     @Override
     public void initRandom(int seconds) {
         var r = new Random();
@@ -101,11 +114,19 @@ public class FridgeOrder implements Serializable, Completable {
         System.out.println("Set wait time for FridgeOrder " + id + ": " + waitTime + " seconds");
     }
 
+    /**
+     * @return whether or not a completion date has been set
+     */
     @Override
     public boolean hasInit() {
         return completedAt != null;
     }
 
+    /**
+     * Prints suppliers involved in the order, then uses Thread.sleep to wait until completion date is in the past.
+     *
+     * @throws InterruptedException in case of manual interruption
+     */
     @Override
     public void complete() throws InterruptedException {
         var suppliers = orderItems.stream()

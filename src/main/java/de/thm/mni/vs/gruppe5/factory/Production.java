@@ -10,11 +10,17 @@ import javax.persistence.EntityManagerFactory;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
-
+/**
+ * Instances of this class are used by factories to simulate production
+ */
 public class Production implements IProduction {
     private final PerformanceTracker performanceTracker;
     private final EntityManagerFactory emf;
 
+    /**
+     *
+     * @param emf persistence entity manager factory
+     */
     public Production(EntityManagerFactory emf) {
         this.emf = emf;
         performanceTracker = PerformanceTracker.getInstance();
@@ -25,12 +31,16 @@ public class Production implements IProduction {
 
             if (!order.hasInit()) {
                 try {
+                    // Check which supplier takes the longest and wait for that time
+                    // We don't need to wait for both, because the ordering and delivering would happen simultaneously,
                     var waitingTime = Math.max(
                             new PartProcurement(Supplier.CoolMechanics).orderPartsFor(order),
                             new PartProcurement(Supplier.ElectroStuff).orderPartsFor(order));
 
                     System.out.println("Waiting time for " + order.getId() + " is " + waitingTime + " seconds");
                     order.init(waitingTime);
+
+                    // Persist the information that we successfully ordered the parts
                     DatabaseUtility.merge(emf, order);
                 } catch (IOException ex) {
                     // If this happens, the supplier server send an invalid response, we can't do anything about that
@@ -63,6 +73,7 @@ public class Production implements IProduction {
             }
             System.out.println("Producing order " + order.getId());
 
+            // Wait for each order item to complete
             order.getOrderItems().forEach(orderItem -> {
                 var product = orderItem.getProduct();
                 var time = Math.round(product.getProductionTime() * orderItem.getQuantity() * factoryTimeFactor);

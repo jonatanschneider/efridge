@@ -3,6 +3,10 @@ package de.thm.mni.vs.gruppe5.common;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Contains information about the order of a single part.
+ * Used as common model for communication from any frontend to our backend (the HQ)
+ */
 public class FrontendPartOrder {
     private String id = UUID.randomUUID().toString();
 

@@ -4,6 +4,9 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 
 import javax.jms.*;
 
+/**
+ * Instances of this class are used to receive object messages from a queue
+ */
 public class Subscriber implements AutoCloseable {
     private Connection connection;
     private Queue queue;
@@ -14,7 +17,7 @@ public class Subscriber implements AutoCloseable {
     /**
      * Subscribes to a channel asynchronously
      *
-     * @param queueName Name of the channel to subscribe to
+     * @param queueName       Name of the channel to subscribe to
      * @param messageListener Callback function reacting to messages
      * @throws JMSException Thrown in case of internal server error
      */
@@ -30,6 +33,9 @@ public class Subscriber implements AutoCloseable {
         consumer.setMessageListener(messageListener);
     }
 
+    /**
+     * Close all resources
+     */
     @Override
     public void close() {
         try {
@@ -41,6 +47,9 @@ public class Subscriber implements AutoCloseable {
         }
     }
 
+    /**
+     * Temporarily pause queue subscription, do nothing if already paused
+     */
     public synchronized void pause() {
         if (isRunning) {
             try {
@@ -52,6 +61,9 @@ public class Subscriber implements AutoCloseable {
         }
     }
 
+    /**
+     * Restart queue subscription, do nothing if already running
+     */
     public synchronized void restart() {
         if (!isRunning) {
             try {

@@ -15,6 +15,9 @@ import javax.persistence.TypedQuery;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * HTTP controller to handle order related requests
+ */
 public class OrderController {
     private final EntityManagerFactory emf;
     private final Publisher publisher;
@@ -31,6 +34,13 @@ public class OrderController {
         em.close();
     }
 
+    /**
+     * Handles post requests
+     *
+     * If the passed order is valid it gets stored in the db and passed to the factories
+     * @param ctx request's context
+     * @throws JMSException
+     */
     public void createOrder(Context ctx) throws JMSException {
         var frontendOrder = ctx.bodyAsClass(FrontendOrder.class);
 
@@ -47,12 +57,21 @@ public class OrderController {
         ctx.status(201);
     }
 
+    /**
+     * Handles get requests for a specific order
+     * @param ctx request's context
+     */
     public void getOrder(Context ctx) {
         EntityManager em = emf.createEntityManager();
         ctx.json(em.find(FridgeOrder.class, ctx.pathParam("id")));
         em.close();
     }
 
+    /**
+     * Handles get requests for all orders
+     * Optional parameter "customerId" to get all orders for a specific customer.
+     * @param ctx request's context
+     */
     public void getOrders(Context ctx) {
         EntityManager em = emf.createEntityManager();
         String customerId = ctx.queryParam(Config.CUSTOMER_ID_PARAM);
@@ -68,6 +87,12 @@ public class OrderController {
         em.close();
     }
 
+    /**
+     * Helper function to build a fridge order from the request body.
+     *
+     * @param frontendOrder request object
+     * @return built fridge order
+     */
     private FridgeOrder buildFridgeOrder(FrontendOrder frontendOrder) {
         var order = new FridgeOrder();
         order.setCustomerId(frontendOrder.customerId);

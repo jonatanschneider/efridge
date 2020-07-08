@@ -1,5 +1,8 @@
 package de.thm.mni.vs.gruppe5.common;
 
+/**
+ * Partial representation of support tickets used to update a ticket via the api
+ */
 public class TicketPatch {
     private String text;
 

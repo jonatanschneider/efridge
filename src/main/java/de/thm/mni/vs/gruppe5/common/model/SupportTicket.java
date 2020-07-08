@@ -6,6 +6,9 @@ import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
 
+/**
+ * Representation of a support ticket
+ */
 @Entity
 public class SupportTicket implements Serializable, Completable {
     @Id
@@ -84,6 +87,12 @@ public class SupportTicket implements Serializable, Completable {
         this.text = text;
     }
 
+    /**
+     * Append a text to the current content of the ticket
+     * Added text will be separated by a dashed line from the old content
+     *
+     * @param text text to be added
+     */
     public void appendText(String text) {
         this.text += "\n--------------\n" + text;
     }
@@ -101,21 +110,39 @@ public class SupportTicket implements Serializable, Completable {
                 '}';
     }
 
+    /**
+     * Initialise waiting time by storing a Date in the future
+     *
+     * @param seconds waiting time in seconds
+     */
     @Override
     public void init(int seconds) {
         completedAt = new Date(System.currentTimeMillis() + seconds * 1000);
     }
 
+    /**
+     * Initialise waiting time by storing a Date in the future. Pick a random waiting time from 1 to parameter.
+     *
+     * @param seconds maximum waiting time in seconds
+     */
     @Override
     public void initRandom(int seconds) {
         init(new Random().nextInt(seconds) + 1);
     }
 
+    /**
+     * @return whether or not a completion date has been set
+     */
     @Override
     public boolean hasInit() {
         return completedAt != null;
     }
 
+    /**
+     * Uses Thread.sleep to wait until completion date is in the past.
+     *
+     * @throws InterruptedException in case of manual interruption
+     */
     @Override
     public void complete() throws InterruptedException {
         while (completedAt.after(new Date(System.currentTimeMillis())))

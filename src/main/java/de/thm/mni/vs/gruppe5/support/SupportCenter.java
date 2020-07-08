@@ -16,6 +16,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Represents a support center which is responsible for handling support tickets.
+ */
 public class SupportCenter {
     private final Location location;
     private int agents;
@@ -25,7 +28,12 @@ public class SupportCenter {
     private Subscriber ticketSubscriber;
     private EntityManagerFactory emf;
 
-
+    /**
+     * Start a new support center, needs three parameters:
+     * 0 - location (can be MEXICO or INDIA)
+     * 1 - agent count - defines how many agents there are to process tickets at the same time
+     * @param args 0 - location 1 - agent count
+     */
     public static void main(String[] args) {
         Location location;
         int agents;
@@ -67,6 +75,9 @@ public class SupportCenter {
         em.close();
     }
 
+    /**
+     * Get incoming tickets
+     */
     private final MessageListener processTicketListener = m -> {
         try {
             var objectMessage = (ObjectMessage) m;
@@ -77,6 +88,10 @@ public class SupportCenter {
         }
     };
 
+    /**
+     * Check available agents and process ticket if possible
+     * @param ticket
+     */
     private void processTicket(SupportTicket ticket) {
         System.out.println("Received ticket: " + ticket.toString());
         DatabaseUtility.merge(emf, ticket);
@@ -85,7 +100,7 @@ public class SupportCenter {
                 ticketSubscriber.pause();
             }
             currentTickets.add(ticket);
-            agent.handleTicket(ticket).thenAccept(this::reportFinishedTicket);
+            agent.handleTicket(ticket).thenAccept(this::reportProcessedTicket);
         } else {
             // This should never happen
             // If it does happen, current implementation of max capacity is faulty
@@ -93,7 +108,11 @@ public class SupportCenter {
         }
     }
 
-    private void reportFinishedTicket(SupportTicket ticket) {
+    /**
+     * Persist a processed ticket and send it back
+     * @param ticket
+     */
+    private void reportProcessedTicket(SupportTicket ticket) {
         System.out.println("Finished ticket " + ticket.toString());
         try {
             DatabaseUtility.merge(emf, ticket);
@@ -111,13 +130,8 @@ public class SupportCenter {
             System.out.println("Closing database connection");
             emf.close();
             System.out.println("Closing ActiveMQ connections");
-            if (ticketSubscriber != null) {
-                ticketSubscriber.close();
-            }
-            if (finishedTicketPublisher != null) {
-                finishedTicketPublisher.close();
-            }
-
+            if (ticketSubscriber != null) ticketSubscriber.close();
+            if (finishedTicketPublisher != null) finishedTicketPublisher.close();
         });
     }
 }

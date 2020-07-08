@@ -5,6 +5,9 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import javax.jms.*;
 import java.io.Serializable;
 
+/**
+ * Instances of this class are used to publish object messages to a queue
+ */
 public class Publisher implements AutoCloseable {
     private final Connection connection;
     private Queue queue;
@@ -41,6 +44,9 @@ public class Publisher implements AutoCloseable {
         producer.send(msg);
     }
 
+    /**
+     * Close all resources
+     */
     @Override
     public void close() {
         try {

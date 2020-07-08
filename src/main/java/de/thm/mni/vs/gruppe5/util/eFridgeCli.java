@@ -12,6 +12,11 @@ import java.net.HttpURLConnection;
 import java.util.Arrays;
 import java.util.Scanner;
 
+/**
+ * WARNING: This CLI tool is only for demonstration purposes and should not be used as a "real" frontend.
+ * There is no real error handling in this tool, as is should only be used for creating and sending request
+ * in the presentation or for testing purposes
+ */
 public class eFridgeCli {
 
     public static void main(String[] args) {

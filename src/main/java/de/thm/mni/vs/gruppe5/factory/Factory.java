@@ -14,19 +14,28 @@ import javax.persistence.EntityManagerFactory;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Represents a factory which is responsible for producing products
+ */
 public class Factory {
     private final Location location;
     private final Publisher finishedOrderPublisher;
     private final Publisher reportPublisher;
+    private final Subscriber orderSubscriber;
     private final Subscriber updatePartCostSubscriber;
-    private Subscriber orderSubscriber;
-    private IProduction production;
-    private float productionTimeFactor;
-    private int maxCapacity;
-    private List<FridgeOrder> currentOrders;
+    private final IProduction production;
+    private final float productionTimeFactor;
+    private final int maxCapacity;
+    private final List<FridgeOrder> currentOrders;
     private EntityManagerFactory emf;
 
-
+    /**
+     * Start a new factory, needs three parameters:
+     * 0 - location (can be USA or CHINA)
+     * 1 - production time factor - a float which defines how fast this factory works (1 = default, 0.5 = 2x speed)
+     * 2 - max capacity - defines how many orders this factory can take at once
+     * @param args 0 - location 1 - productionTimeFactor 2 - maxCapacity
+     */
     public static void main(String[] args) {
         Location location;
         float productionTimeFactor = 0;
@@ -60,12 +69,20 @@ public class Factory {
 
         try {
             var factory = new Factory(location, productionTimeFactor, maxCapacity);
+            // On exit close all opened resources
             Runtime.getRuntime().addShutdownHook(factory.closeResources());
         } catch (JMSException e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * Create a new factory
+     * @param location location of the factory
+     * @param productionTimeFactor defines how fast this factory works (1 = default, 0.5 = 2x speed)
+     * @param maxCapacity defines how many orders this factory can take at once
+     * @throws JMSException
+     */
     public Factory(Location location, float productionTimeFactor, int maxCapacity) throws JMSException {
         this.location = location;
         this.productionTimeFactor = productionTimeFactor;
@@ -79,10 +96,11 @@ public class Factory {
         this.production = new Production(emf);
         this.reportPublisher = new Publisher(Config.REPORT_QUEUE);
 
+        // Select correct queue for this location for updating the part costs
         if (location == Location.USA) {
-            this.updatePartCostSubscriber = new Subscriber(Config.UPDATE_PARTS_COST_TOPIC_US, updatePartCosts);
+            this.updatePartCostSubscriber = new Subscriber(Config.UPDATE_PARTS_COST_QUEUE_US, updatePartCosts);
         } else {
-            this.updatePartCostSubscriber = new Subscriber(Config.UPDATE_PARTS_COST_TOPIC_CN, updatePartCosts);
+            this.updatePartCostSubscriber = new Subscriber(Config.UPDATE_PARTS_COST_QUEUE_CN, updatePartCosts);
         }
 
         // Initialize and start report task
@@ -113,6 +131,11 @@ public class Factory {
         }
     };
 
+    /**
+     * Process a incoming order from the hq
+     * @param order the order which should be produced
+     * @throws IllegalStateException
+     */
     private void processOrder(FridgeOrder order) throws IllegalStateException {
         System.out.println("Received order: " + order.toString());
         if (currentOrders.size() < maxCapacity) {
@@ -122,6 +145,10 @@ public class Factory {
                 orderSubscriber.pause();
             }
             DatabaseUtility.merge(emf, order);
+
+            // Order all needed parts, then:
+            // produce the product, then:
+            // report that the order has been produced
             production.orderParts(order)
                     .thenCompose(o -> CompletableFuture.supplyAsync(() -> {
                         DatabaseUtility.merge(emf, o);
@@ -136,12 +163,16 @@ public class Factory {
         }
     }
 
+    /**
+     * Handle a JMS-Message that indicates that the costs for a part needs to be updated
+     */
     private final MessageListener updatePartCosts = m -> {
         var objectMessage = (ObjectMessage) m;
         try {
             var part = (Part) objectMessage.getObject();
 
             System.out.println("Received update costs for part: " + part);
+            // Update the database with the received object
             DatabaseUtility.merge(emf, part);
 
         } catch (JMSException e) {
@@ -149,12 +180,19 @@ public class Factory {
         }
     };
 
+    /**
+     * Report that a order has been finished (or: produced) to the HQ
+     * @param order the finished order
+     */
     private void reportFinishedOrder(FridgeOrder order) {
         if (order.getStatus() != OrderStatus.COMPLETED) return;
         System.out.println("Finished order " + order.toString());
         try {
+            // Update the local database
             DatabaseUtility.merge(emf, order);
+            // Publish the object
             finishedOrderPublisher.publish(order);
+            // Remove the order from the currentOrder list
             currentOrders.remove(order);
             orderSubscriber.restart();
         } catch (JMSException e) {
@@ -162,25 +200,19 @@ public class Factory {
         }
     }
 
+    /**
+     * Close all opened resources such as publisher, subscriber and database connections
+     * @return thread that executes the closing
+     */
     private Thread closeResources() {
         return new Thread(() -> {
             System.out.println("Shutdown headquarter");
             System.out.println("Closing ActiveMQ connections");
-            if (finishedOrderPublisher != null) {
-                finishedOrderPublisher.close();
-            }
-            if (reportPublisher != null) {
-                reportPublisher.close();
-            }
-            if (orderSubscriber != null) {
-                orderSubscriber.close();
-            }
-            if (updatePartCostSubscriber != null) {
-                updatePartCostSubscriber.close();
-            }
-            if (emf != null) {
-                emf.close();
-            }
+            if (finishedOrderPublisher != null) finishedOrderPublisher.close();
+            if (reportPublisher != null) reportPublisher.close();
+            if (orderSubscriber != null) orderSubscriber.close();
+            if (updatePartCostSubscriber != null) updatePartCostSubscriber.close();
+            if (emf != null) emf.close();
         });
     }
 }

@@ -7,6 +7,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import java.io.Serializable;
 
+/**
+ * Represents a specific part which can be ordered from one of our supplier
+ */
 @Entity
 public class Part implements Serializable {
     @Id @GeneratedValue(generator="system-uuid")
