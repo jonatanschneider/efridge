@@ -8,6 +8,7 @@ import de.thm.mni.vs.gruppe5.util.DatabaseUtility;
 
 import javax.persistence.EntityManagerFactory;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -42,6 +43,9 @@ public class Production implements IProduction {
 
                     // Persist the information that we successfully ordered the parts
                     DatabaseUtility.merge(emf, order);
+                } catch (SocketTimeoutException ex) {
+                    System.err.println("Supplier not reachable, try again on next day. Order: " + order);
+                    return order;
                 } catch (IOException ex) {
                     // If this happens, the supplier server send an invalid response, we can't do anything about that
                     return order;
