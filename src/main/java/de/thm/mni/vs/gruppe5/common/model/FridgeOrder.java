@@ -2,11 +2,7 @@ package de.thm.mni.vs.gruppe5.common.model;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Represents an order of a customer with (multiple) items
@@ -138,5 +134,18 @@ public class FridgeOrder implements Serializable, Completable {
         System.out.println("Ordering from " + String.join(", ", suppliers));
         while (completedAt.after(new Date(System.currentTimeMillis())))
             Thread.sleep(1000);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FridgeOrder that = (FridgeOrder) o;
+        return id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

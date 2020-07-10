@@ -27,7 +27,7 @@ public class Factory {
     private final IProduction production;
     private final float productionTimeFactor;
     private final int maxCapacity;
-    private final List<FridgeOrder> currentOrders;
+    private final Set<FridgeOrder> currentOrders;
     private EntityManagerFactory emf;
 
     /**
@@ -35,6 +35,7 @@ public class Factory {
      * 0 - location (can be USA or CHINA)
      * 1 - production time factor - a float which defines how fast this factory works (1 = default, 0.5 = 2x speed)
      * 2 - max capacity - defines how many orders this factory can take at once
+     *
      * @param args 0 - location 1 - productionTimeFactor 2 - maxCapacity
      */
     public static void main(String[] args) {
@@ -81,16 +82,17 @@ public class Factory {
 
     /**
      * Create a new factory
-     * @param location location of the factory
+     *
+     * @param location             location of the factory
      * @param productionTimeFactor defines how fast this factory works (1 = default, 0.5 = 2x speed)
-     * @param maxCapacity defines how many orders this factory can take at once
+     * @param maxCapacity          defines how many orders this factory can take at once
      * @throws JMSException
      */
     public Factory(Location location, float productionTimeFactor, int maxCapacity) throws JMSException {
         this.location = location;
         this.productionTimeFactor = productionTimeFactor;
         this.maxCapacity = maxCapacity;
-        this.currentOrders = Collections.synchronizedList(new ArrayList<>(maxCapacity));
+        this.currentOrders = Collections.synchronizedSet(new HashSet<>(maxCapacity));
         this.emf = DatabaseUtility.getEntityManager(this.location);
 
         // Initialize publisher and subscriber
@@ -136,18 +138,20 @@ public class Factory {
 
     /**
      * Process a incoming order from the hq
+     *
      * @param order the order which should be produced
      * @throws IllegalStateException
      */
-    private void processOrder(FridgeOrder order) throws IllegalStateException {
-        System.out.println("Received order: " + order.toString());
-        if (currentOrders.size() < maxCapacity) {
+    private void processOrder(FridgeOrder order) {
+        if (!currentOrders.contains(order) && currentOrders.size() < maxCapacity) {
+            System.out.println("Received order: " + order.toString());
             PerformanceTracker.getInstance().receivedOrder();
 
             if (currentOrders.size() == maxCapacity - 1) {
                 orderSubscriber.pause();
             }
             DatabaseUtility.merge(emf, order);
+            currentOrders.add(order);
 
             // Order all needed parts, then:
             // produce the product, then:
@@ -159,10 +163,6 @@ public class Factory {
                     }))
                     .thenCompose(o -> production.produce(o, this.productionTimeFactor))
                     .thenAccept(this::reportFinishedOrder);
-        } else {
-            // This should never happen
-            // If it does happen, current implementation of max capacity is faulty
-            throw new IllegalStateException("Max capacity reached, didn't accept order: " + order.toString());
         }
     }
 
@@ -185,6 +185,7 @@ public class Factory {
 
     /**
      * Report that a order has been finished (or: produced) to the HQ
+     *
      * @param order the finished order
      */
     private void reportFinishedOrder(FridgeOrder order) {
@@ -205,6 +206,7 @@ public class Factory {
 
     /**
      * Close all opened resources such as publisher, subscriber and database connections
+     *
      * @return thread that executes the closing
      */
     private Thread closeResources() {
