@@ -29,7 +29,7 @@ public class Publisher implements AutoCloseable {
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         queue = session.createQueue(queueName);
         producer = session.createProducer(queue);
-        producer.setTimeToLive(1000);
+        //producer.setTimeToLive(1000);
     }
 
     /**
