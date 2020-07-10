@@ -9,6 +9,8 @@
     <version>1.0-SNAPSHOT</version>
     <properties>
         <maven.compiler.release>14</maven.compiler.release>
+        <maven.compiler.source>14</maven.compiler.source>
+        <maven.compiler.target>14</maven.compiler.target>
     </properties>
 
     <dependencies>
@@ -56,5 +58,91 @@
         </dependency>
 
     </dependencies>
-
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>HQ</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>de.thm.mni.vs.gruppe5.hq.Headquarter</mainClass>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>US</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>de.thm.mni.vs.gruppe5.factory.Factory</mainClass>
+                            <commandlineArgs>USA 1.0 2</commandlineArgs>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>CN</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>de.thm.mni.vs.gruppe5.factory.Factory</mainClass>
+                            <commandlineArgs>CHINA 0.75 2</commandlineArgs>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>IN</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>de.thm.mni.vs.gruppe5.support.SupportCenter</mainClass>
+                            <commandlineArgs>INDIA 2</commandlineArgs>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>MX</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>de.thm.mni.vs.gruppe5.support.SupportCenter</mainClass>
+                            <commandlineArgs>MEXICO 2</commandlineArgs>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>CM</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>de.thm.mni.vs.gruppe5.supplier.CoolMechanics</mainClass>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>ES</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>de.thm.mni.vs.gruppe5.supplier.ElectroStuff</mainClass>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>CLI</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>de.thm.mni.vs.gruppe5.util.eFridgeCli</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
