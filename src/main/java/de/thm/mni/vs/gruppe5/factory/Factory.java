@@ -144,7 +144,7 @@ public class Factory {
      */
     private void processOrder(FridgeOrder order) {
         if (!currentOrders.contains(order) && currentOrders.size() < maxCapacity) {
-            System.out.println("Received order: " + order.toString());
+            System.out.println("Received order: " + order.toFormattedString());
             PerformanceTracker.getInstance().receivedOrder();
 
             if (currentOrders.size() == maxCapacity - 1) {
@@ -190,7 +190,7 @@ public class Factory {
      */
     private void reportFinishedOrder(FridgeOrder order) {
         if (order.getStatus() != OrderStatus.COMPLETED) return;
-        System.out.println("Finished order " + order.toString());
+        System.out.println("Finished order " + order.toFormattedString());
         try {
             // Update the local database
             DatabaseUtility.merge(emf, order);

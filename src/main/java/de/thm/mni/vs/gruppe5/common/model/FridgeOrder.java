@@ -83,6 +83,19 @@ public class FridgeOrder implements Serializable, Completable {
     }
 
     /**
+     * Returns a formatted string representation destined for output. In contrast to toString, not all attributes are
+     * necessarily output here.
+     * @return a string representation of the object
+     */
+    public String toFormattedString() {
+        return "FridgeOrder{" +
+                "id='" + id + '\'' +
+                ", customerId='" + customerId + '\'' +
+                ", status=" + status +
+                '}';
+    }
+
+    /**
      * Initialise waiting time by storing a Date in the future
      *
      * @param seconds waiting time in seconds

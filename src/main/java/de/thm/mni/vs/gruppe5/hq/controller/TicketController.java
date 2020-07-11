@@ -41,7 +41,7 @@ public class TicketController {
         var ticket = buildSupportTicket(frontendTicket);
         ticket.setStatus(TicketStatus.RECEIVED);
         DatabaseUtility.persist(emf, ticket);
-        System.out.println("Send ticket to support centers: " + ticket.toString());
+        System.out.println("Send ticket to support centers: " + ticket.toFormattedString());
         publisher.publish(ticket);
         ctx.status(201);
     }

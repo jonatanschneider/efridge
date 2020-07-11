@@ -52,7 +52,7 @@ public class OrderController {
 
         var order = buildFridgeOrder(frontendOrder);
         DatabaseUtility.persist(emf, order);
-        System.out.println("Send order to factories: " + order.toString());
+        System.out.println("Send order to factories: " + order.toFormattedString());
         publisher.publish(order);
         ctx.status(201);
     }

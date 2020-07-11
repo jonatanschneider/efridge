@@ -81,4 +81,18 @@ public class Performance implements Serializable {
                 ", location=" + location +
                 '}';
     }
+
+    /**
+     * Returns a formatted string representation destined for output. In contrast to toString, not all attributes are
+     * necessarily output here.
+     * @return a string representation of the object
+     */
+    public String toFormattedString() {
+        return "Performance{" +
+                "orderCount=" + orderCount +
+                ", producedProductsCount=" + producedProductsCount +
+                ", producedProductsCost=" + producedProductsCost +
+                ", location=" + location +
+                '}';
+    }
 }

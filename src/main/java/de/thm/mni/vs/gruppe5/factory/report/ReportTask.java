@@ -27,7 +27,7 @@ public class ReportTask extends TimerTask {
     @Override
     public void run() {
         PerformanceTracker performanceTracker = PerformanceTracker.getInstance();
-        System.out.println("Send new report: " + performanceTracker.getPerformance());
+        System.out.println("Send new report: " + performanceTracker.getPerformance().toFormattedString());
 
         reportCount++;
 

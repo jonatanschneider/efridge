@@ -125,7 +125,8 @@ public class Headquarter {
             try {
                 var object = ((ObjectMessage) m).getObject();
                 if (object instanceof FridgeOrder) {
-                    System.out.println("Received finished order: " + object);
+                    var order = (FridgeOrder) object;
+                    System.out.println("Received finished order: " + order.toFormattedString());
                     // Persist the updated order into the hq database
                     DatabaseUtility.merge(emf, object);
                 }
@@ -148,11 +149,11 @@ public class Headquarter {
 
                     // Check if the ticket has been closed by a support agent
                     if (ticket.getStatus() == TicketStatus.CLOSED) {
-                        System.out.println("Received finished ticket: " + object);
+                        System.out.println("Received finished ticket: " + ticket.toFormattedString());
                         // We set the time in the HQ, so that we don't need to deal with local timezones from MX or IN
                         ticket.setClosingTime(new Date(System.currentTimeMillis()));
                     } else {
-                        System.out.println("Received unfinished ticket: " + object);
+                        System.out.println("Received unfinished ticket: " + ticket.toFormattedString());
                     }
                     // Update the corresponding dataset in our database
                     DatabaseUtility.merge(emf, ticket);
@@ -173,7 +174,7 @@ public class Headquarter {
                 var object = ((ObjectMessage) m).getObject();
                 if (object instanceof Performance) {
                     var performance = (Performance) object;
-                    System.out.println("Received performance: " + performance);
+                    System.out.println("Received performance: " + performance.toFormattedString());
                     DatabaseUtility.persist(emf, performance);
                 }
             } catch (JMSException e) {
