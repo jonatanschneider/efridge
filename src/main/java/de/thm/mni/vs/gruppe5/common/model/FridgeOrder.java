@@ -14,7 +14,7 @@ public class FridgeOrder implements Serializable, Completable {
 
     private String customerId;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<OrderItem> orderItems;
 
     private OrderStatus status;

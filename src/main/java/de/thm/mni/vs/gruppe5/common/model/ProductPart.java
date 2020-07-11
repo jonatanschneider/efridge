@@ -14,7 +14,7 @@ public class ProductPart implements Serializable {
     @GenericGenerator(name="system-uuid", strategy = "uuid")
     private String id;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Part part;
 
     private int quantity;
