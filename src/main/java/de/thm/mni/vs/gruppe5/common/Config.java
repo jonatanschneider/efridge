@@ -40,8 +40,8 @@ public class Config {
     // that we have no real customer service
     public static final float CHANCE_OF_CLOSING_TICKET = 0.6f;
 
-    public static final long DAY_DURATION_IN_SECONDS = 60;
-    public static final long REPORTS_PER_DAY = 4;
+    public static final long DAY_DURATION_IN_SECONDS = 60 * 5;
+    public static final long REPORTS_PER_DAY = 2;
 
     /**
      * Get the url for ordering parts from a specified supplier
