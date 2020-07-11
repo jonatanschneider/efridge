@@ -95,7 +95,7 @@ public class SupportCenter {
      */
     private void processTicket(SupportTicket ticket) {
         if (!currentTickets.contains(ticket) && currentTickets.size() < agents) {
-            System.out.println("Received ticket: " + ticket.toString());
+            System.out.println("Received ticket: " + ticket.toFormattedString());
             DatabaseUtility.merge(emf, ticket);
             if (currentTickets.size() == agents - 1) {
                 ticketSubscriber.pause();
@@ -110,7 +110,7 @@ public class SupportCenter {
      * @param ticket
      */
     private void reportProcessedTicket(SupportTicket ticket) {
-        System.out.println("Finished ticket " + ticket.toString());
+        System.out.println("Processed ticket " + ticket.toFormattedString());
         try {
             DatabaseUtility.merge(emf, ticket);
             finishedTicketPublisher.publish(ticket);

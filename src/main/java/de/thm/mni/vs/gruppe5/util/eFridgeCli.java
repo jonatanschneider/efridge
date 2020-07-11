@@ -56,7 +56,7 @@ public class eFridgeCli {
                                     System.out.println("Enter customer id");
                                     var customerId = scanner.nextLine();
                                     FridgeOrder[] orders = getOrders(customerId);
-                                    Arrays.stream(orders).map(eFridgeCli::formatOrderStatus).forEach(System.out::println);
+                                    Arrays.stream(orders).map(FridgeOrder::toFormattedString).forEach(System.out::println);
                                     break;
                             }
 
@@ -74,7 +74,7 @@ public class eFridgeCli {
                                     System.out.println("Enter customer id");
                                     var customerId = scanner.nextLine();
                                     SupportTicket[] tickets = getTickets(customerId);
-                                    System.out.println(Arrays.toString(tickets));
+                                    Arrays.stream(tickets).map(SupportTicket::toFormattedString).forEach(System.out::println);
                                     break;
                                 case "update":
                                     System.out.println("Enter ticket id");
@@ -87,7 +87,7 @@ public class eFridgeCli {
                             }
                             break;
                         case "performance":
-                            System.out.println(Arrays.toString(getPerformance()));
+                            Arrays.stream(getPerformance()).map(Performance::toFormattedString).forEach(System.out::println);
                             break;
                         case "part":
                             System.out.println("Enter part id");
@@ -103,14 +103,6 @@ public class eFridgeCli {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-    }
-
-    private static String formatOrderStatus(FridgeOrder order) {
-        return "FridgeOrder{" +
-                "id='" + order.getId() + '\'' +
-                ", customerId='" + order.getCustomerId() + '\'' +
-                ", status=" + order.getStatus() +
-                '}';
     }
 
     private static Performance[] getPerformance() throws IOException {
