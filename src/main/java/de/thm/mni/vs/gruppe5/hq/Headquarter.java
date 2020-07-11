@@ -125,7 +125,8 @@ public class Headquarter {
             try {
                 var object = ((ObjectMessage) m).getObject();
                 if (object instanceof FridgeOrder) {
-                    System.out.println("Received finished order: " + object);
+                    var order = (FridgeOrder) object;
+                    System.out.println("Received finished order: " + order.toFormattedString());
                     // Persist the updated order into the hq database
                     DatabaseUtility.merge(emf, object);
                 }
